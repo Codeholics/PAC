@@ -8,11 +8,11 @@
     "Resume": false
   },
   "savedValues": {
-    "Volume": 50,
+    "Volume": "",
     "Resume": false,
     "Voice": "",
-    "Speed": 5,
-    "Text": "The open-tool path and the next likely execution defect are both patched. I’m validating the edited files plus a focused PowerShell check that mirrors the boolean/blank-parameter behavior.",
+    "Speed": "",
+    "Text": "",
     "Generate": false
   }
 }
