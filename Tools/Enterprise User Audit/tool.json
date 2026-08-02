@@ -1,0 +1,25 @@
+{
+  "name": "Enterprise User Audit",
+  "category": "Enterprise",
+  "description": "Custom PAC workflow for auditing users across AD, Exchange, and SQL, with a sample-data mode for prototype validation.",
+  "toolPath": "Tools/Enterprise User Audit",
+  "scriptPath": "Tools/Enterprise User Audit/Invoke-EnterpriseUserAudit.ps1",
+  "configPath": "Tools/Enterprise User Audit/config.json",
+  "inputPath": "Tools/Enterprise User Audit/input",
+  "tempPath": "Tools/Enterprise User Audit/temp",
+  "outputPath": "Tools/Enterprise User Audit/output",
+  "entryCommand": "Invoke-EnterpriseUserAudit",
+  "requiresNetwork": false,
+  "window": {
+    "title": "Enterprise User Audit",
+    "width": 980,
+    "height": 860
+  },
+  "dataSources": {
+    "activeDirectory": true,
+    "exchange": true,
+    "sql": true,
+    "logging": true,
+    "sampleData": true
+  }
+}

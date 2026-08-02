@@ -8,6 +8,7 @@ function Register-PacPages {
         Get-RegexExtractorPage -Context $Context
         Get-TextToSpeechPage -Context $Context
         Get-CSVToJSONPage -Context $Context
+        Get-EnterpriseUserAuditPage -Context $Context
         # Add future pages here
     )
 }

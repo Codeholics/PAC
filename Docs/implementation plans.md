@@ -2,7 +2,7 @@
 
 - [PAC Modular Implementation Plan](#pac-modular-implementation-plan)
   - [Goal](#goal)
-    - [Current Next Step](#current-next-step)
+  - [Current Next Step](#current-next-step)
   - [Preferred Tool Organization](#preferred-tool-organization)
   - [Current Problem](#current-problem)
   - [Recommended Architecture](#recommended-architecture)
@@ -34,6 +34,7 @@
     - [2. Do not mix tool registration with UI building logic everywhere](#2-do-not-mix-tool-registration-with-ui-building-logic-everywhere)
     - [3. Do not over-engineer metadata too early](#3-do-not-over-engineer-metadata-too-early)
     - [4. Do not assume helper type resolution will come from the caller](#4-do-not-assume-helper-type-resolution-will-come-from-the-caller)
+    - [5. Do not assume WinUIShell child windows behave like generic WPF windows](#5-do-not-assume-winuishell-child-windows-behave-like-generic-wpf-windows)
   - [Recommended Next Implementation Order](#recommended-next-implementation-order)
   - [Bottom Line](#bottom-line)
 
@@ -59,15 +60,24 @@ If you only need one answer from this document, use this section instead of scan
 
 The current next implementation step is:
 
-- ⏳ when the first workflow-heavy tool arrives, implement it as a custom page or custom child window that reuses PAC shared helpers to validate the two-lane architecture
+- ✅ implement the first workflow-heavy tool as a custom page or custom child window that reuses PAC shared helpers to validate the two-lane architecture
+
+Completed proof case:
+
+- Enterprise User Audit is now the first workflow-heavy PAC proof case.
+- It is registered through `Pages\Register-PacPages.ps1`.
+- It launches from `Pages\Get-EnterpriseUserAuditPage.ps1`.
+- It keeps a normal PAC tool folder under `Tools\Enterprise User Audit\` with `tool.json`, `config.json`, and `Invoke-EnterpriseUserAudit.ps1`.
+- It uses a custom child window instead of the manifest-driven simple-tool builder.
+- It still reuses PAC shared helpers for manifest loading, config persistence, child-window chrome, page surface setup, and dialogs.
 
 The most concrete follow-up inside that step is:
 
-- pick the first tool whose workflow genuinely does not fit the manifest-driven builder cleanly, and keep it on a custom page or custom child-window path while reusing shared PAC helpers where they still fit
+- use Enterprise User Audit as the baseline proof case for future workflow-heavy tools, and refine the shared helper boundary based on what this tool exposed
 
 The next concrete slice inside that step should be:
 
-- use that first workflow-heavy tool to prove the boundary between simple self-building tools and custom tool windows, while reusing the shared child-window chrome and other helper surfaces where appropriate
+- decide which parts of the Enterprise User Audit workflow should remain tool-local and which are worth promoting into shared PAC helpers for future complex tools
 
 How to read the roadmap correctly:
 
@@ -189,6 +199,7 @@ Suggested files:
 - `Pages\Get-CompressDirectoryPage.ps1`
 - `Pages\Get-GoogleMapsUrlPage.ps1`
 - `Pages\Get-TextToSpeechPage.ps1`
+- `Pages\Get-EnterpriseUserAuditPage.ps1`
 - `Pages\Get-ReportsPage.ps1`
 - `Pages\Get-ExchangePage.ps1`
 
@@ -381,7 +392,7 @@ What is already working in code:
 
 - `start.ps1` now builds the shell, creates `$appContext`, loads page modules, and builds navigation from registered page metadata.
 - `Pages\Register-PacPages.ps1` is now the registry entry point for pages.
-- `Pages\Get-HomePage.ps1`, `Pages\Get-CompressDirectoryPage.ps1`, `Pages\Get-GoogleMapsUrlPage.ps1`, `Pages\Get-CSVToJSONPage.ps1`, `Pages\Get-RegexExtractorPage.ps1`, and `Pages\Get-TextToSpeechPage.ps1` exist and are being used by navigation.
+- `Pages\Get-HomePage.ps1`, `Pages\Get-CompressDirectoryPage.ps1`, `Pages\Get-GoogleMapsUrlPage.ps1`, `Pages\Get-CSVToJSONPage.ps1`, `Pages\Get-RegexExtractorPage.ps1`, `Pages\Get-TextToSpeechPage.ps1`, and `Pages\Get-EnterpriseUserAuditPage.ps1` exist and are being used by navigation.
 - `Shared\New-PacNavigationItem.ps1`, `Shared\Show-PacDialog.ps1`, `Shared\New-PacChildWindow.ps1`, `Shared\Set-PacPageSurface.ps1`, `Shared\Get-PacToolManifest.ps1`, `Shared\Get-PacToolConfig.ps1`, `Shared\Save-PacToolConfig.ps1`, `Shared\New-PacToolTextInput.ps1`, and `Shared\Show-PacSimpleToolWindow.ps1` now exist.
 - `Tools\Compress Directory\Compress-Directory.ps1` can now be executed directly with `-InputDirectory` and `-OutputDirectory`.
 - `Tools\Google Maps Url\Get-GoogleMapsURL.ps1` can now be executed directly with `-Address` and is no longer dependent on a live web request just to generate a URL.
@@ -418,6 +429,11 @@ What is already working in code:
 - the Compress Directory manifest is now the first proof case for explicit picker-backed folder validation rules and custom folder-path validation messages.
 - the reusable `saveResult` action path in the shared builder now goes through the same save helper as builder-owned output-file parameters, so extension normalization, overwrite/create-directory policy, overwrite confirmation, and skipped-save outcomes do not drift between PAC tools.
 - the CSV to JSON manifest is now the proof case that the reusable `saveResult` action can opt into the same save-policy metadata as builder-owned output-file parameters.
+- Enterprise User Audit now proves PAC's second lane: a workflow-heavy custom child window can still use the standard tool-folder contract instead of bypassing PAC structure.
+- Enterprise User Audit now proves that complex tools can reuse shared PAC helpers for manifest loading, config persistence, window chrome, page surface setup, and dialogs without being forced into the simple-tool builder.
+- Enterprise User Audit now includes an offline-safe sample-data mode so a complex PAC tool can be validated without live AD, Exchange, or SQL connectivity.
+- Enterprise User Audit runtime validation now confirms its direct script path can run in sample-data mode without export and return records while leaving `ExportPath` blank.
+- Enterprise User Audit integration also exposed two WinUIShell-specific lessons for future custom tools: PAC child windows should use `Activate()` rather than `Show()`, and callback handlers should follow the existing single-state-object `ArgumentList` pattern instead of passing multiple custom callback arguments.
 - the legacy `openContainingFolder` action now uses literal-path resolution, so result paths containing wildcard characters such as brackets behave the same way as the newer output-path actions.
 - the Compress Directory script now also uses literal-path handling for its own input, output, and overwrite checks, so bracketed folder names no longer fail inside the tool after passing builder validation.
 - picker initial-directory resolution in the shared input helper now also uses literal-path checks, so saved or current file/folder values containing brackets still seed the browse dialog correctly.
@@ -793,6 +809,19 @@ If a shared helper creates WinUIShell objects such as `EventCallback`, `Window`,
 
 Do not rely on the page module that calls the helper to make those types available indirectly.
 
+### 5. Do not assume WinUIShell child windows behave like generic WPF windows
+
+Two concrete lessons were verified while integrating Enterprise User Audit:
+
+- PAC child windows should be activated with `Activate()`, not `Show()`, because the current WinUIShell window surface used by PAC does not expose a `Show()` method in the same way.
+- PAC event callbacks should follow the existing single-state-object pattern used elsewhere in the repo. Passing multiple custom callback arguments created avoidable runtime ambiguity in the Enterprise User Audit page and caused incorrect behavior between non-export and export runs.
+
+For future custom pages, prefer the same callback model already used by shared PAC helpers:
+
+- one state hashtable per callback
+- `ArgumentList = $state`
+- script block parameters shaped like `param($state, $sender, $e)`
+
 ## Recommended Next Implementation Order
 
 Reading rule:
@@ -809,7 +838,8 @@ Reading rule:
 7. ✅ Create shared labeled-input helpers for common tool forms.
 8. ✅ After two or three tools exist, decide whether to build JSON-driven parameter forms for simple tools.
 9. ✅ Tighten the manifest contract for the remaining typed-input rules, plus any remaining no-result success behavior and common actions in `Shared\Show-PacSimpleToolWindow.ps1` now that `saveResult` and builder-owned output files share one save path.
-10. ⏳ When the first workflow-heavy tool arrives, implement it as a custom page that reuses PAC shared helpers to validate the two-lane architecture.
+10. ✅ Implement the first workflow-heavy tool as a custom page that reuses PAC shared helpers to validate the two-lane architecture.
+11. ⏳ Use Enterprise User Audit as the baseline proof case to decide which complex-tool patterns should move into `Shared\` only when a second workflow-heavy tool needs them.
 
 ## Bottom Line
 
@@ -829,5 +859,5 @@ The immediate cleanup priorities are now:
 
 - keep the shared child-window chrome helper stable as the baseline for current PAC tool windows
 - keep the shared self-building manifest contract stable unless a real tool exposes another concrete gap
-- keep the first genuinely complex tool on a custom page path so PAC proves both simple and complex tool models
-- use that first workflow-heavy tool to validate where the boundary should sit between reusable PAC helpers and custom workflow-specific UI
+- keep Enterprise User Audit as the reference custom page path so PAC continues to prove both simple and complex tool models
+- use Enterprise User Audit to validate where the boundary should sit between reusable PAC helpers and custom workflow-specific UI

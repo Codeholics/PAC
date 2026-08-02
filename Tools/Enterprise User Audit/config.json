@@ -1,0 +1,44 @@
+{
+  "defaults": {
+    "Identity": "",
+    "Title": "",
+    "Manager": "",
+    "Company": "",
+    "Division": "",
+    "Group": "",
+    "UseSampleData": true,
+    "IncludeMailbox": false,
+    "IncludeSqlData": false,
+    "ExportPath": "",
+    "SqlConnectionString": "",
+    "SelectedColumns": [
+      "DisplayName",
+      "SamAccountName",
+      "UserPrincipalName",
+      "Department",
+      "Enabled",
+      "Source"
+    ]
+  },
+  "savedValues": {
+    "Company": "",
+    "SelectedColumns": [
+      "DisplayName",
+      "Source",
+      "SamAccountName",
+      "UserPrincipalName",
+      "Department",
+      "Enabled"
+    ],
+    "Identity": "",
+    "SqlConnectionString": "",
+    "IncludeMailbox": false,
+    "Group": "",
+    "Manager": "",
+    "Division": "",
+    "Title": "",
+    "IncludeSqlData": false,
+    "UseSampleData": true,
+    "ExportPath": ""
+  }
+}
