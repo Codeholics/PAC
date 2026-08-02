@@ -1,0 +1,12 @@
+{
+  "defaults": {
+    "CsvText": "",
+    "Mode": "array",
+    "OutputFile": ""
+  },
+  "savedValues": {
+    "OutputFile": "",
+    "CsvText": "",
+    "Mode": ""
+  }
+}

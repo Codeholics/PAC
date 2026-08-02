@@ -1,0 +1,16 @@
+[
+    {
+        "Name": "WinUIShell",
+        "url": "https://www.nuget.org/packages/WinUIShell",
+        "projectUrl": "https://github.com/mdgrs-mei/WinUIShell",
+        "InstallCommand": "Install-PSResource -Name WinUIShell",
+        "PSVersion": "7.0"
+    },
+    {
+        "Name": "DashHtml",
+        "url": "https://www.nuget.org/packages/DashHtml",
+        "projectUrl": "https://github.com/mdgrs-mei/DashHtml",
+        "InstallCommand": "Install-PSResource -Name DashHtml",
+        "PSVersion": "7.0"
+    }
+]

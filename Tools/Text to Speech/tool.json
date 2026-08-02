@@ -1,0 +1,109 @@
+{
+	"name": "Text to Speech",
+	"category": "Conversion",
+	"description": "Speak text using the system's built-in TTS engine with optional speed, volume, voice, script generation, and resume output.",
+	"toolPath": "Tools/Text to Speech",
+	"scriptPath": "Tools/Text to Speech/Invoke-Speech.ps1",
+	"configPath": "Tools/Text to Speech/config.json",
+	"inputPath": "Tools/Text to Speech/input",
+	"tempPath": "Tools/Text to Speech/temp",
+	"outputPath": "Tools/Text to Speech/output",
+	"entryCommand": "Invoke-Speech",
+	"requiresNetwork": false,
+	"window": {
+		"title": "Text to Speech",
+		"width": 600,
+		"height": 420
+	},
+	"ui": {
+		"primaryActionText": "Speak Text",
+		"dialogs": {
+			"invalidNumberTitle": "Invalid Speech Number",
+			"invalidNumberMessage": "Use a valid numeric speech setting before running the tool.",
+			"noResultTitle": "Speech Completed",
+			"noResultMessage": "The speech request completed. Enable Return Resume Output if you want run details shown here.",
+			"successTitle": "Speech Resume Ready",
+			"successMessage": "Speech completed and resume output was returned."
+		},
+		"result": {
+			"label": "Speech Result",
+			"placeholder": "Resume output will appear here when enabled.",
+			"noResultText": "Speech completed. Enable Return Resume Output to display details here.",
+			"minHeight": 72
+		},
+		"actions": [
+			{
+				"label": "Copy Result",
+				"kind": "copyResult"
+			}
+		]
+	},
+	"parameters": [
+		{
+			"name": "Text",
+			"type": "String",
+			"control": "TextArea",
+			"multiline": true,
+			"minHeight": 120,
+			"label": "Text",
+			"required": true,
+			"description": "The text to speak.",
+			"validationMessages": {
+				"required": "Enter the text you want the speech engine to read aloud."
+			}
+		},
+		{
+			"name": "Speed",
+			"type": "Number",
+			"integerOnly": true,
+			"label": "Speed",
+			"required": false,
+			"min": -10,
+			"max": 10,
+			"description": "Optional speech rate from -10 to 10. Higher values speak faster.",
+			"validationMessages": {
+				"invalidNumber": "Speed must be a valid number between -10 and 10.",
+				"integer": "Speed must be a whole number between -10 and 10.",
+				"min": "Speed cannot be lower than -10 for the Windows speech engine.",
+				"max": "Speed cannot be higher than 10 for the Windows speech engine."
+			}
+		},
+		{
+			"name": "Volume",
+			"type": "Number",
+			"integerOnly": true,
+			"label": "Volume",
+			"required": false,
+			"min": 0,
+			"max": 100,
+			"description": "Optional speech volume from 0 to 100.",
+			"validationMessages": {
+				"invalidNumber": "Volume must be a valid number from 0 to 100.",
+				"integer": "Volume must be a whole number from 0 to 100.",
+				"min": "Volume cannot be lower than 0.",
+				"max": "Volume cannot be higher than 100."
+			}
+		},
+		{
+			"name": "Voice",
+			"type": "String",
+			"label": "Voice",
+			"required": false,
+			"description": "Optional installed voice name."
+		},
+		{
+			"name": "Generate",
+			"type": "Boolean",
+			"label": "Generate Script",
+			"required": false,
+			"description": "Generate a PowerShell speech script in the tool output folder."
+		},
+		{
+			"name": "Resume",
+			"type": "Boolean",
+			"label": "Return Resume Output",
+			"required": false,
+			"description": "Return the current speech settings after speaking the text."
+		}
+	]
+}

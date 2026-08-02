@@ -1,0 +1,10 @@
+{
+  "defaults": {
+    "inputDirectory": "",
+    "outputDirectory": ""
+  },
+  "savedValues": {
+    "OutputDirectory": "",
+    "InputDirectory": ""
+  }
+}

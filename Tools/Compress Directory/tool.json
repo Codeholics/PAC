@@ -1,0 +1,95 @@
+{
+	"name": "Compress Directory",
+	"category": "Conversion",
+	"description": "Compress a directory into a zip archive.",
+	"toolPath": "Tools/Compress Directory",
+	"scriptPath": "Tools/Compress Directory/Compress-Directory.ps1",
+	"configPath": "Tools/Compress Directory/config.json",
+	"inputPath": "Tools/Compress Directory/input",
+	"tempPath": "Tools/Compress Directory/temp",
+	"outputPath": "Tools/Compress Directory/output",
+	"entryCommand": "Compress-Directory",
+	"requiresNetwork": false,
+	"window": {
+		"title": "Compress Directory",
+		"width": 600,
+		"height": 420
+	},
+	"ui": {
+		"primaryActionText": "Run Compression",
+		"dialogs": {
+			"missingInputTitle": "Directory Required",
+			"missingInputMessage": "Choose the required directory path before running compression.",
+			"invalidValueTitle": "Invalid Compression Input",
+			"invalidValueMessage": "Review the compression settings and correct the highlighted value before running again.",
+			"successTitle": "Compression Completed",
+			"successMessage": "The archive was created successfully. Use the result actions to copy the path or open its location.",
+			"errorTitle": "Compression Error"
+		},
+		"result": {
+			"label": "Created Archive",
+			"placeholder": "The generated zip path will appear here.",
+			"minHeight": 72
+		},
+		"actions": [
+			{
+				"kind": "copyResult",
+				"label": "Copy Output Path"
+			},
+			{
+				"kind": "openResult",
+				"label": "Open Output"
+			},
+			{
+				"kind": "openContainingFolder",
+				"label": "Open Containing Folder",
+				"noResultTitle": "No Archive Yet",
+				"noResultMessage": "Run compression before trying to open the archive location.",
+				"errorTitle": "Open Folder Error"
+			}
+		]
+	},
+	"parameters": [
+		{
+			"name": "InputDirectory",
+			"type": "Folder",
+			"label": "Input Directory Path",
+			"required": true,
+			"description": "Directory to compress into a zip archive.",
+			"validationMessages": {
+				"folderNotFound": "Choose an existing folder to compress.",
+				"invalidFolderPath": "Input Directory Path must point to a folder, not a file."
+			},
+			"pathPicker": {
+				"label": "Browse Input Folder",
+				"title": "Select the directory to compress",
+				"initialDirectoryProperty": "inputPath",
+				"showNewFolderButton": false
+			}
+		},
+		{
+			"name": "OutputDirectory",
+			"type": "Folder",
+			"label": "Output Directory Path",
+			"required": true,
+			"description": "Directory where the zip archive will be created.",
+			"pathValidation": {
+				"mustExist": false
+			},
+			"validationMessages": {
+				"invalidFolderPath": "Output Directory Path must point to a folder location."
+			},
+			"pathPicker": {
+				"label": "Browse Output Folder",
+				"title": "Select where the zip archive will be created",
+				"initialDirectoryProperty": "outputPath",
+				"showNewFolderButton": true
+			}
+		}
+	],
+	"output": {
+		"type": "ZipArchive",
+		"extension": ".zip",
+		"description": "Creates one zip archive named after the input directory."
+	}
+}

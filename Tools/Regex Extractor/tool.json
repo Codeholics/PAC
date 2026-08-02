@@ -1,0 +1,115 @@
+{
+  "name": "Regex Extractor",
+  "category": "Conversion",
+  "description": "Extract regex matches, capture groups, or unique values from text.",
+  "toolPath": "Tools/Regex Extractor",
+  "scriptPath": "Tools/Regex Extractor/Invoke-RegexExtractor.ps1",
+  "configPath": "Tools/Regex Extractor/config.json",
+  "inputPath": "Tools/Regex Extractor/input",
+  "tempPath": "Tools/Regex Extractor/temp",
+  "outputPath": "Tools/Regex Extractor/output",
+  "entryCommand": "Invoke-RegexExtractor",
+  "requiresNetwork": false,
+  "window": {
+    "title": "Regex Extractor",
+    "width": 720,
+    "height": 560
+  },
+  "ui": {
+    "primaryActionText": "Extract",
+    "result": {
+      "label": "Extracted Result",
+      "format": "json",
+      "jsonDepth": 10,
+      "placeholder": "Matches or extracted values will appear here.",
+      "minHeight": 140
+    },
+    "actions": [
+      {
+        "kind": "copyResult",
+        "label": "Copy Result"
+      },
+      {
+        "kind": "openOutput",
+        "label": "Open Saved File",
+        "outputParameterName": "OutputFile",
+        "noResultTitle": "No Saved File Yet",
+        "noResultMessage": "Choose an output file and run the extractor before opening the saved file.",
+        "errorTitle": "Open Saved File Error"
+      },
+      {
+        "kind": "openOutputContainingFolder",
+        "label": "Show Saved File",
+        "outputParameterName": "OutputFile",
+        "noResultTitle": "No Saved File Yet",
+        "noResultMessage": "Choose an output file and run the extractor before showing the saved file.",
+        "errorTitle": "Show Saved File Error"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "name": "Text",
+      "type": "String",
+      "control": "TextArea",
+      "multiline": true,
+      "minHeight": 180,
+      "label": "Source Text",
+      "required": true,
+      "description": "Paste text to search, or import a text file.",
+      "fileImport": {
+        "label": "Import Text File",
+        "title": "Select a text file",
+        "filter": "Text files (*.txt)|*.txt|CSV files (*.csv)|*.csv|Log files (*.log)|*.log|All files (*.*)|*.*"
+      }
+    },
+    {
+      "name": "Pattern",
+      "type": "String",
+      "label": "Regex Pattern",
+      "required": true,
+      "minLength": 1,
+      "description": "Enter the regular expression to run against the source text."
+    },
+    {
+      "name": "Mode",
+      "type": "String",
+      "control": "ComboBox",
+      "label": "Extraction Mode",
+      "required": true,
+      "allowedValues": [
+        "matches",
+        "groups",
+        "unique"
+      ],
+      "description": "Choose raw matches, the first capture group, or unique match values."
+    },
+    {
+      "name": "OutputFile",
+      "type": "File",
+      "label": "Output File",
+      "description": "Optionally save the extracted JSON result as part of the run instead of copying it later.",
+      "validationMessages": {
+        "fileAlreadyExists": "Choose a new output file path. Regex Extractor is currently configured not to overwrite an existing file.",
+        "invalidFileExtension": "Regex Extractor output must use the .json extension."
+      },
+      "pathPicker": {
+        "label": "Choose Output File",
+        "title": "Choose an extraction output file",
+        "mode": "save",
+        "filter": "JSON files (*.json)|*.json|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+        "defaultExtension": "json",
+        "fileName": "regex-results.json",
+        "initialDirectoryProperty": "outputPath",
+        "checkFileExists": false
+      },
+      "resultOutput": {
+        "content": "formatted",
+        "appendDefaultExtension": true,
+        "enforceDefaultExtension": true,
+        "overwriteExisting": false,
+        "createParentDirectories": true
+      }
+    }
+  ]
+}

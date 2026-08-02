@@ -1,0 +1,133 @@
+{
+  "name": "CSV to JSON",
+  "category": "Conversion",
+  "description": "Convert CSV text into JSON using array or object mode.",
+  "toolPath": "Tools/CSV to JSON",
+  "scriptPath": "Tools/CSV to JSON/Convert-CSVToJSON.ps1",
+  "configPath": "Tools/CSV to JSON/config.json",
+  "inputPath": "Tools/CSV to JSON/input",
+  "tempPath": "Tools/CSV to JSON/temp",
+  "outputPath": "Tools/CSV to JSON/output",
+  "entryCommand": "Convert-CsvToJSON",
+  "requiresNetwork": false,
+  "window": {
+    "title": "CSV to JSON",
+    "width": 700,
+    "height": 520
+  },
+  "ui": {
+    "primaryActionText": "Convert",
+    "dialogs": {
+      "savedOutputTitle": "JSON Output Saved",
+      "savedOutputMessage": "The conversion saved JSON output during the run.\r\n\r\n{savedOutputSummary}",
+      "skippedOutputTitle": "JSON Output Not Written",
+      "skippedOutputMessage": "The conversion completed, but one or more configured JSON outputs were not written.\r\n\r\n{skippedOutputSummary}"
+    },
+    "result": {
+      "label": "JSON Output",
+      "format": "json",
+      "jsonDepth": 10,
+      "placeholder": "Converted JSON will appear here.",
+      "minHeight": 120
+    },
+    "actions": [
+      {
+        "kind": "copyResult",
+        "label": "Copy JSON"
+      },
+      {
+        "kind": "saveResult",
+        "label": "Save JSON",
+        "title": "Save converted JSON",
+        "filter": "JSON files (*.json)|*.json|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+        "defaultExtension": "json",
+        "appendDefaultExtension": true,
+        "overwriteExisting": true,
+        "confirmOverwrite": true,
+        "confirmOverwriteTitle": "Overwrite Existing JSON File?",
+        "confirmOverwriteMessage": "The selected JSON output file already exists:\r\n{outputPath}\r\n\r\nOverwrite it with the converted JSON?",
+        "createParentDirectories": true,
+        "fileName": "converted.json",
+        "initialDirectoryProperty": "outputPath",
+        "noResultTitle": "No JSON Yet",
+        "noResultMessage": "Convert the CSV input before trying to save the JSON output.",
+        "successTitle": "JSON Saved",
+        "successMessage": "The converted JSON was saved successfully.",
+        "skippedTitle": "Save JSON Skipped",
+        "skippedMessage": "The converted JSON was not saved.",
+        "errorTitle": "Save JSON Error"
+      },
+      {
+        "kind": "openOutput",
+        "label": "Open Saved File",
+        "outputParameterName": "OutputFile",
+        "noResultTitle": "No Saved File Yet",
+        "noResultMessage": "Choose an output file and run the conversion before opening the saved file.",
+        "errorTitle": "Open Saved File Error"
+      },
+      {
+        "kind": "openOutputContainingFolder",
+        "label": "Show Saved File",
+        "outputParameterName": "OutputFile",
+        "noResultTitle": "No Saved File Yet",
+        "noResultMessage": "Choose an output file and run the conversion before showing the saved file.",
+        "errorTitle": "Show Saved File Error"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "name": "CsvText",
+      "type": "String",
+      "control": "TextArea",
+      "multiline": true,
+      "minHeight": 180,
+      "label": "CSV Input",
+      "required": true,
+      "description": "Paste CSV text to convert, or import a CSV file.",
+      "fileImport": {
+        "label": "Import CSV File",
+        "title": "Select a CSV file",
+        "initialDirectoryProperty": "inputPath",
+        "filter": "CSV files (*.csv)|*.csv|Text files (*.txt)|*.txt|All files (*.*)|*.*"
+      }
+    },
+    {
+      "name": "Mode",
+      "type": "String",
+      "control": "ComboBox",
+      "label": "Output Mode",
+      "required": true,
+      "allowedValues": [
+        "array",
+        "objects"
+      ],
+      "description": "Choose whether to return a JSON array or an object keyed by the first CSV column."
+    },
+    {
+      "name": "OutputFile",
+      "type": "File",
+      "label": "Output File",
+      "description": "Optionally save the converted JSON as part of the run instead of saving it afterward.",
+      "pathPicker": {
+        "label": "Choose Output File",
+        "title": "Choose a JSON output file",
+        "mode": "save",
+        "filter": "JSON files (*.json)|*.json|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+        "defaultExtension": "json",
+        "fileName": "converted.json",
+        "initialDirectoryProperty": "outputPath",
+        "checkFileExists": false
+      },
+      "resultOutput": {
+        "content": "formatted",
+        "appendDefaultExtension": true,
+        "overwriteExisting": true,
+        "confirmOverwrite": true,
+        "confirmOverwriteTitle": "Overwrite Existing JSON File?",
+        "confirmOverwriteMessage": "The selected JSON output file already exists:\r\n{outputPath}\r\n\r\nOverwrite it with the converted JSON?",
+        "createParentDirectories": true
+      }
+    }
+  ]
+}

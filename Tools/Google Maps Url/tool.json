@@ -1,0 +1,57 @@
+{
+	"name": "Google Maps Url",
+	"category": "Conversion",
+	"description": "Obtain a Google Maps URL from an address.",
+	"toolPath": "Tools/Google Maps Url",
+	"scriptPath": "Tools/Google Maps Url/Get-GoogleMapsURL.ps1",
+	"configPath": "Tools/Google Maps Url/config.json",
+	"inputPath": "Tools/Google Maps Url/input",
+	"tempPath": "Tools/Google Maps Url/temp",
+	"outputPath": "Tools/Google Maps Url/output",
+	"entryCommand": "Get-GoogleMapsURL",
+	"requiresNetwork": true,
+	"window": {
+		"title": "Google Maps Url",
+		"width": 600,
+		"height": 420
+	},
+	"ui": {
+		"primaryActionText": "Generate URL",
+		"dialogs": {
+			"offlineTitle": "Maps Tool Offline",
+			"offlineMessage": "Reconnect to the network before generating a Google Maps URL from this PAC tool."
+		},
+		"result": {
+			"label": "Generated URL",
+			"placeholder": "Generated Google Maps URL will appear here.",
+			"minHeight": 72
+		},
+		"actions": [
+			{
+				"label": "Copy URL",
+				"kind": "copyResult",
+				"noResultTitle": "No URL Yet",
+				"noResultMessage": "Generate a Google Maps URL before trying to copy it.",
+				"successTitle": "URL Copied",
+				"successMessage": "The Google Maps URL has been copied to the clipboard.",
+				"errorTitle": "Copy URL Error"
+			},
+			{
+				"label": "Open In Browser",
+				"kind": "openResult",
+				"noResultTitle": "No URL Yet",
+				"noResultMessage": "Generate a Google Maps URL before trying to open it.",
+				"errorTitle": "Open URL Error"
+			}
+		]
+	},
+	"parameters": [
+		{
+			"name": "Address",
+			"type": "String",
+			"label": "Address",
+			"required": true,
+			"description": "The address to obtain a Google Maps URL for."
+		}
+	]
+}
