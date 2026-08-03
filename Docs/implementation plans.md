@@ -70,14 +70,16 @@ Completed proof case:
 - It keeps a normal PAC tool folder under `Tools\Enterprise User Audit\` with `tool.json`, `config.json`, and `Invoke-EnterpriseUserAudit.ps1`.
 - It uses a custom child window instead of the manifest-driven simple-tool builder.
 - It still reuses PAC shared helpers for manifest loading, config persistence, child-window chrome, page surface setup, and dialogs.
+- PAC Session Readiness Center is now the next implemented workflow-heavy PAC tool and the first platform-level readiness workflow.
+- It reuses the same custom-page/custom-window lane while also introducing shared authentication and AD-readiness helper functions for future enterprise tools.
 
 The most concrete follow-up inside that step is:
 
-- use Enterprise User Audit as the baseline proof case for future workflow-heavy tools, and refine the shared helper boundary based on what this tool exposed
+- use Enterprise User Audit and PAC Session Readiness Center together as the baseline proof cases for future workflow-heavy tools, and refine the shared helper boundary based on what those tools exposed
 
 The next concrete slice inside that step should be:
 
-- decide which parts of the Enterprise User Audit workflow should remain tool-local and which are worth promoting into shared PAC helpers for future complex tools
+- decide which parts of Enterprise User Audit and PAC Session Readiness Center should remain tool-local and which are worth promoting into shared PAC helpers for future complex tools
 
 How to read the roadmap correctly:
 
@@ -434,6 +436,10 @@ What is already working in code:
 - Enterprise User Audit now includes an offline-safe sample-data mode so a complex PAC tool can be validated without live AD, Exchange, or SQL connectivity.
 - Enterprise User Audit runtime validation now confirms its direct script path can run in sample-data mode without export and return records while leaving `ExportPath` blank.
 - Enterprise User Audit integration also exposed two WinUIShell-specific lessons for future custom tools: PAC child windows should use `Activate()` rather than `Show()`, and callback handlers should follow the existing single-state-object `ArgumentList` pattern instead of passing multiple custom callback arguments.
+- PAC Session Readiness Center now exists as a real PAC tool with its own page, manifest, config, runtime, and registered navigation entry.
+- PAC Session Readiness Center now proves PAC can host a platform-level workflow tool whose purpose is shared capability assessment rather than direct business-task execution.
+- the shared `Get-PacAuthenticationProvider` and `Test-PacActiveDirectoryAvailable` helpers now exist as PAC-owned platform helpers rather than remaining only as standalone draft functions.
+- PAC Session Readiness Center runtime validation now confirms it returns a structured readiness object in the current environment, including authentication provider, module count, environment state, and test results.
 - the legacy `openContainingFolder` action now uses literal-path resolution, so result paths containing wildcard characters such as brackets behave the same way as the newer output-path actions.
 - the Compress Directory script now also uses literal-path handling for its own input, output, and overwrite checks, so bracketed folder names no longer fail inside the tool after passing builder validation.
 - picker initial-directory resolution in the shared input helper now also uses literal-path checks, so saved or current file/folder values containing brackets still seed the browse dialog correctly.
@@ -839,7 +845,8 @@ Reading rule:
 8. ✅ After two or three tools exist, decide whether to build JSON-driven parameter forms for simple tools.
 9. ✅ Tighten the manifest contract for the remaining typed-input rules, plus any remaining no-result success behavior and common actions in `Shared\Show-PacSimpleToolWindow.ps1` now that `saveResult` and builder-owned output files share one save path.
 10. ✅ Implement the first workflow-heavy tool as a custom page that reuses PAC shared helpers to validate the two-lane architecture.
-11. ⏳ Use Enterprise User Audit as the baseline proof case to decide which complex-tool patterns should move into `Shared\` only when a second workflow-heavy tool needs them.
+11. ✅ Use Enterprise User Audit as the baseline proof case to decide which complex-tool patterns should move into `Shared\` only when a second workflow-heavy tool needs them.
+12. ⏳ Use Enterprise User Audit and PAC Session Readiness Center together to decide which platform and workflow helper patterns should move into `Shared\` before a third complex PAC tool is added.
 
 ## Bottom Line
 
@@ -859,5 +866,5 @@ The immediate cleanup priorities are now:
 
 - keep the shared child-window chrome helper stable as the baseline for current PAC tool windows
 - keep the shared self-building manifest contract stable unless a real tool exposes another concrete gap
-- keep Enterprise User Audit as the reference custom page path so PAC continues to prove both simple and complex tool models
-- use Enterprise User Audit to validate where the boundary should sit between reusable PAC helpers and custom workflow-specific UI
+- keep Enterprise User Audit and PAC Session Readiness Center as the reference custom page paths so PAC continues to prove both simple and complex tool models
+- use Enterprise User Audit and PAC Session Readiness Center to validate where the boundary should sit between reusable PAC helpers, shared platform state, and custom workflow-specific UI

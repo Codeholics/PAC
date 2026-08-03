@@ -3,6 +3,7 @@ function Register-PacPages {
 
     return @(
         Get-HomePage -Context $Context
+        Get-PacSessionReadinessPage -Context $Context
         Get-CompressDirectoryPage -Context $Context
         Get-GoogleMapsUrlPage -Context $Context
         Get-RegexExtractorPage -Context $Context
