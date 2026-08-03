@@ -21,24 +21,24 @@
     ]
   },
   "savedValues": {
-    "Company": "",
+    "Division": "",
+    "Identity": "",
     "SelectedColumns": [
-      "DisplayName",
-      "Source",
+      "Enabled",
       "SamAccountName",
       "UserPrincipalName",
       "Department",
-      "Enabled"
+      "DisplayName",
+      "Source"
     ],
-    "Identity": "",
-    "SqlConnectionString": "",
-    "IncludeMailbox": false,
-    "Group": "",
     "Manager": "",
-    "Division": "",
-    "Title": "",
     "IncludeSqlData": false,
+    "Title": "",
+    "Group": "",
+    "Company": "",
     "UseSampleData": true,
-    "ExportPath": ""
+    "ExportPath": "",
+    "IncludeMailbox": false,
+    "SqlConnectionString": ""
   }
 }
