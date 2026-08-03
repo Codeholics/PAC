@@ -6,8 +6,8 @@
     "RunLoggingTest": false
   },
   "savedValues": {
-    "SqlConnectionString": "",
     "RunExchangeTest": false,
+    "SqlConnectionString": "",
     "RunSqlTest": false,
     "RunLoggingTest": false
   }
