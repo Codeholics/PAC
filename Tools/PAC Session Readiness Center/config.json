@@ -1,0 +1,12 @@
+{
+  "defaults": {
+    "SqlConnectionString": "",
+    "RunExchangeTest": false,
+    "RunSqlTest": false,
+    "RunLoggingTest": false
+  },
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
+}

@@ -4,9 +4,8 @@
     "Pattern": "",
     "Mode": "matches"
   },
-  "savedValues": {
-    "Pattern": "",
-    "Mode": "",
-    "Text": ""
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

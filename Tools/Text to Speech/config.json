@@ -7,12 +7,8 @@
     "Generate": false,
     "Resume": false
   },
-  "savedValues": {
-    "Volume": "",
-    "Resume": false,
-    "Voice": "",
-    "Speed": "",
-    "Text": "",
-    "Generate": false
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

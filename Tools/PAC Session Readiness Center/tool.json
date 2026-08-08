@@ -1,0 +1,18 @@
+{
+  "name": "PAC Session Readiness Center",
+  "category": "Platform",
+  "description": "Assess PAC runtime, authentication, module, and environment readiness before launching enterprise workflows.",
+  "toolPath": "Tools/PAC Session Readiness Center",
+  "scriptPath": "Tools/PAC Session Readiness Center/Invoke-PacSessionReadiness.ps1",
+  "configPath": "Tools/PAC Session Readiness Center/config.json",
+  "inputPath": "Tools/PAC Session Readiness Center/input",
+  "tempPath": "Tools/PAC Session Readiness Center/temp",
+  "outputPath": "Tools/PAC Session Readiness Center/output",
+  "entryCommand": "Invoke-PacSessionReadiness",
+  "requiresNetwork": false,
+  "window": {
+    "title": "PAC Session Readiness Center",
+    "width": 980,
+    "height": 860
+  }
+}

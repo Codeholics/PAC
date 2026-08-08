@@ -2,7 +2,8 @@
   "defaults": {
     "Address": ""
   },
-  "savedValues": {
-    "Address": ""
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

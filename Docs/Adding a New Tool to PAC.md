@@ -65,7 +65,7 @@ Tools/
 Notes:
 
 - `tool.json` is the manifest PAC reads to build the tool window.
-- `config.json` stores defaults and saved values.
+- `config.json` stores defaults, tool preferences, and optional saved values.
 - `input`, `temp`, and `output` should exist up front because PAC manifests commonly refer to them.
 
 ## 2. Write the Tool Script
@@ -181,17 +181,18 @@ Template:
     "Text": "",
     "Mode": "basic"
   },
-  "savedValues": {
-    "Text": "",
-    "Mode": ""
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }
 ```
 
 Notes:
 
 - `defaults` are initial tool values.
-- `savedValues` store last-used values.
+- `preferences.SaveValuesEnabled` controls whether PAC should reuse and write last-used values for that tool.
+- `savedValues` only persist last-used values when the user explicitly enables the save-values toggle in the UI.
 - Keep parameter names aligned with the manifest.
 
 ## 5. Create the Page File
@@ -555,7 +556,7 @@ Important: PAC currently has strong proof for the simple-tool lane and only limi
 - Forgetting to register the new page in `Pages/Register-PacPages.ps1`.
 - Using parameter names in `tool.json` that do not match the script parameter names.
 - Duplicating script logic outside the real tool function instead of using `@PSBoundParameters`.
-- Forgetting to create `config.json` with both `defaults` and `savedValues`.
+- Forgetting to create `config.json` with `defaults`, a `preferences.SaveValuesEnabled` flag, and `savedValues`.
 - Assuming a `resultOutput` parameter is automatically passed to the script.
 - Forgetting that shared helpers using `EventCallback` must import the WinUIShell namespaces they need in that helper file.
 - Choosing the simple-tool lane for a workflow that is already clearly too custom for a manifest.
