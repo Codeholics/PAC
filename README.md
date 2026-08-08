@@ -122,7 +122,7 @@ Current documented external dependencies include:
 
 On-prem Exchange support is currently session-detected rather than module-declared. The readiness workflow can report loaded on-prem Exchange sessions or management shells separately from Exchange Online connectivity.
 
-See `modules.json` and the docs in `Docs/` for the current planning notes around packaging and distribution.
+See `PSModules/modules.json` and the docs in `Docs/` for the current planning notes around packaging and distribution.
 
 ## Acknowledgment
 
