@@ -164,6 +164,7 @@ function Get-EnterpriseUserAuditAdRecords {
 
     $adFilter = Get-EnterpriseUserAuditAdFilter -Identity $Identity -Title $Title -Manager $Manager -Company $Company -Division $Division
     $memberLookup = $null
+    $groupMembers = @()
 
     if (-not [string]::IsNullOrWhiteSpace($Group)) {
         try {
@@ -190,12 +191,21 @@ function Get-EnterpriseUserAuditAdRecords {
     }
 
     if (-not [string]::IsNullOrWhiteSpace($Group) -and $adFilter -eq '*') {
-        $users = foreach ($distinguishedName in $memberLookup.Keys) {
-            if ($distinguishedName -like '*,*') {
-                Get-ADUser -Identity $distinguishedName -Properties $properties -ErrorAction SilentlyContinue
+        $resolvedUsers = foreach ($member in $groupMembers) {
+            $memberIdentity = $null
+
+            if ($member.PSObject.Properties.Name -contains 'DistinguishedName' -and $member.DistinguishedName) {
+                $memberIdentity = $member.DistinguishedName
+            }
+            elseif ($member.PSObject.Properties.Name -contains 'SamAccountName' -and $member.SamAccountName) {
+                $memberIdentity = $member.SamAccountName
+            }
+
+            if (-not [string]::IsNullOrWhiteSpace($memberIdentity)) {
+                Get-ADUser -Identity $memberIdentity -Properties $properties -ErrorAction SilentlyContinue
             }
         }
-        $users = @($users | Where-Object { $null -ne $_ })
+        $users = @($resolvedUsers | Where-Object { $null -ne $_ })
     }
     else {
         $users = @(Get-ADUser -Filter $adFilter -Properties $properties)
