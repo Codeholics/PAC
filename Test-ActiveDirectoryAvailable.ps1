@@ -1,17 +1,8 @@
+$pacSharedHelper = Join-Path $PSScriptRoot 'Shared\Test-PacActiveDirectoryAvailable.ps1'
+if (-not (Get-Command Test-PacActiveDirectoryAvailable -ErrorAction SilentlyContinue)) {
+    . $pacSharedHelper
+}
+
 function Test-ActiveDirectoryAvailable {
-
-    try {
-        $computer = Get-CimInstance Win32_ComputerSystem
-
-        if (-not $computer.PartOfDomain) {
-            return $false
-        }
-
-        $null = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().FindDomainController()
-
-        return $true
-    }
-    catch {
-        return $false
-    }
+    return Test-PacActiveDirectoryAvailable
 }
