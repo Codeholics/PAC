@@ -8,10 +8,5 @@
   "preferences": {
     "SaveValuesEnabled": false
   },
-  "savedValues": {
-    "RunExchangeTest": false,
-    "SqlConnectionString": "",
-    "RunSqlTest": false,
-    "RunLoggingTest": false
-  }
+  "savedValues": {}
 }
