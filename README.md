@@ -8,7 +8,7 @@ PowerShell Automation Center, or PAC, is a WinUI-based PowerShell desktop shell 
 ![WinUI](https://img.shields.io/badge/UI-WinUI%203-0F6CBD?style=for-the-badge&logo=windows11&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Active%20Prototype-2EA043?style=for-the-badge)
-![Tools](https://img.shields.io/badge/Tools-5%20Current-8B5CF6?style=for-the-badge)
+![Tools](https://img.shields.io/badge/Tools-7%20Current-8B5CF6?style=for-the-badge)
 
 </div>
 
@@ -24,7 +24,9 @@ The app currently exposes these tools from the main navigation:
 
 - Compress Directory
 - CSV to JSON
+- Enterprise User Audit
 - Google Maps Url
+- PAC Session Readiness Center
 - Regex Extractor
 - Text to Speech
 
@@ -36,6 +38,7 @@ These tools live under `Tools/` and are surfaced through page definitions in `Pa
 - Manifest-driven simple-tool windows for fast tool registration.
 - Category-aware navigation model for grouping tools in the left pane.
 - Reusable shared helpers for dialogs, child windows, input controls, and page composition.
+- Workflow-heavy custom tools for enterprise readiness and audit scenarios alongside the simple-tool builder.
 - JSON-first configuration direction for tool settings, metadata, and future user preferences.
 - PowerShell-first implementation that keeps individual tools easy to script and maintain.
 
@@ -117,6 +120,8 @@ Current documented external dependencies include:
 - `SqlServer`
 - `ImportExcel`
 
+On-prem Exchange support is currently session-detected rather than module-declared. The readiness workflow can report loaded on-prem Exchange sessions or management shells separately from Exchange Online connectivity.
+
 See `modules.json` and the docs in `Docs/` for the current planning notes around packaging and distribution.
 
 ## Acknowledgment
@@ -135,6 +140,7 @@ This README reflects the current prototype state of the PAC application. Some fe
 
 - Expand the tool catalog beyond the initial conversion and utility set.
 - Harden authentication and authorization flows.
+- Reuse PAC Session Readiness Center capability state across enterprise workflow tools.
 - Add preference persistence and theme handling.
 - Improve packaging for restricted enterprise environments.
 - Introduce more complex workflow pages alongside manifest-driven tools.

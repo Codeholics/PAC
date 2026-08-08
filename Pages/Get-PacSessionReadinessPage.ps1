@@ -17,7 +17,12 @@ function Get-PacSessionReadinessConfigEntry {
         return $null
     }
 
-    foreach ($propertyName in 'savedValues', 'defaults') {
+    $propertyNames = @('defaults')
+    if (Test-PacToolConfigSaveValuesEnabled -Config $Config) {
+        $propertyNames = @('savedValues', 'defaults')
+    }
+
+    foreach ($propertyName in $propertyNames) {
         if ($Config.PSObject.Properties.Name -contains $propertyName) {
             $source = $Config.$propertyName
             if ($null -ne $source -and ($source.PSObject.Properties.Name -contains $Name)) {
@@ -57,6 +62,8 @@ function Format-PacSessionReadinessResultText {
         'Capabilities',
         ('- GeneralToolsReady: {0}' -f $Result.Capabilities.GeneralToolsReady),
         ('- ADToolsReady: {0}' -f $Result.Capabilities.ADToolsReady),
+        ('- ExchangeOnlineToolsReady: {0}' -f $Result.Capabilities.ExchangeOnlineToolsReady),
+        ('- ExchangeOnPremToolsReady: {0}' -f $Result.Capabilities.ExchangeOnPremToolsReady),
         ('- ExchangeToolsReady: {0}' -f $Result.Capabilities.ExchangeToolsReady),
         ('- SqlToolsReady: {0}' -f $Result.Capabilities.SqlToolsReady),
         ('- ExportReady: {0}' -f $Result.Capabilities.ExportReady),
@@ -100,7 +107,7 @@ function Show-PacSessionReadinessWindow {
     $sqlConnectionBox.Text = [string](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'SqlConnectionString')
 
     $exchangeCheckBox = [CheckBox]::new()
-    $exchangeCheckBox.Content = 'Run Exchange session test'
+    $exchangeCheckBox.Content = 'Run Exchange Online and on-prem session tests'
     $exchangeCheckBox.IsChecked = [bool](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'RunExchangeTest')
 
     $sqlCheckBox = [CheckBox]::new()
@@ -111,8 +118,16 @@ function Show-PacSessionReadinessWindow {
     $loggingCheckBox.Content = 'Run logging write test'
     $loggingCheckBox.IsChecked = [bool](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'RunLoggingTest')
 
+    $saveValuesCheckBox = [CheckBox]::new()
+    $saveValuesCheckBox.Content = 'Save values to config'
+    $saveValuesCheckBox.IsChecked = Test-PacToolConfigSaveValuesEnabled -Config $toolConfig
+
+    $saveValuesNote = [TextBlock]::new()
+    $saveValuesNote.Text = 'Leave this off to avoid persisting connection strings or prior test selections between sessions.'
+    $saveValuesNote.TextWrapping = 'Wrap'
+
     $note = [TextBlock]::new()
-    $note.Text = 'Authentication and AD reachability are always assessed. SQL, Exchange, and logging tests are optional so the tool remains safe offline.'
+    $note.Text = 'Authentication and AD reachability are always assessed. SQL, Exchange Online, Exchange on-prem, and logging tests are optional so the tool remains safe on any network.'
     $note.TextWrapping = 'Wrap'
 
     $buttonPanel = [StackPanel]::new()
@@ -142,6 +157,7 @@ function Show-PacSessionReadinessWindow {
         ExchangeCheckBox   = $exchangeCheckBox
         SqlCheckBox        = $sqlCheckBox
         LoggingCheckBox    = $loggingCheckBox
+        SaveValuesCheckBox = $saveValuesCheckBox
     }
 
     $runCallback = [EventCallback]::new()
@@ -156,7 +172,7 @@ function Show-PacSessionReadinessWindow {
             RunLoggingTest      = [bool]($state.LoggingCheckBox.IsChecked -eq $true)
         }
 
-        Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues
+        Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues -SaveValuesEnabled ([bool]($state.SaveValuesCheckBox.IsChecked -eq $true))
 
         try {
             $invokeParameters = @{
@@ -184,6 +200,8 @@ function Show-PacSessionReadinessWindow {
     $panel.Children.Add($exchangeCheckBox)
     $panel.Children.Add($sqlCheckBox)
     $panel.Children.Add($loggingCheckBox)
+    $panel.Children.Add($saveValuesCheckBox)
+    $panel.Children.Add($saveValuesNote)
     $panel.Children.Add($note)
     $panel.Children.Add($buttonPanel)
     $panel.Children.Add($resultTitle)

@@ -4,9 +4,8 @@
     "Pattern": "",
     "Mode": "matches"
   },
-  "savedValues": {
-    "Pattern": "13",
-    "Mode": "matches",
-    "Text": "I am uncle 13 sam"
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

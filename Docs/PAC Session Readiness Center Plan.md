@@ -17,7 +17,7 @@ The next useful step is to strengthen PAC's shared platform behavior:
 
 - module readiness
 - network and domain readiness
-- Exchange connection readiness
+- Exchange Online and on-prem connection readiness
 - SQL connection readiness
 - logging readiness
 - capability state that other PAC tools can reuse
@@ -43,11 +43,12 @@ This tool should answer these questions before a user opens a sensitive PAC tool
 1. Is PAC running with the expected runtime and modules?
 2. Is the current machine on-network or off-network?
 3. Are AD-dependent features available?
-4. Is Exchange connectivity available?
-5. Is SQL connectivity available?
-6. Is export capability available?
-7. Is logging capability available?
-8. Which PAC tools are currently usable in this session?
+4. Is Exchange Online connectivity available?
+5. Is on-prem Exchange connectivity available?
+6. Is SQL connectivity available?
+7. Is export capability available?
+8. Is logging capability available?
+9. Which PAC tools are currently usable in this session?
 
 ## Recommended Tool Type
 
@@ -101,6 +102,7 @@ Check and display status for:
 - WinUIShell
 - ActiveDirectory
 - ExchangeOnlineManagement
+- on-prem Exchange session or management shell presence
 - SqlServer
 - ImportExcel
 - PSLogging
@@ -119,7 +121,7 @@ Show:
 - network available yes/no
 - likely domain-connected yes/no
 - PAC offline mode summary
-- whether AD, Exchange, and SQL workflows should be expected to work
+- whether AD, Exchange Online, on-prem Exchange, and SQL workflows should be expected to work
 
 ## Section 4: Authentication Provider Status
 
@@ -145,7 +147,8 @@ This should use `Get-AuthenticationProvider` as the starting contract.
 Actions:
 
 - Test AD query
-- Test Exchange connection
+- Test Exchange Online session
+- Test on-prem Exchange session
 - Test SQL connection
 - Test export capability
 - Test logging write
@@ -163,6 +166,8 @@ Show a simple capability matrix:
 
 - General Tools Ready
 - AD Tools Ready
+- Exchange Online Tools Ready
+- Exchange On-Prem Tools Ready
 - Exchange Tools Ready
 - SQL Tools Ready
 - Export Ready
@@ -227,6 +232,7 @@ Example shape:
     Modules = @{
         ActiveDirectory = 'Available'
         ExchangeOnlineManagement = 'Missing'
+        ExchangeOnPremShell = 'Unknown'
         SqlServer = 'Available'
         ImportExcel = 'Available'
         PSLogging = 'Available'
@@ -238,6 +244,8 @@ Example shape:
     Capabilities = @{
         GeneralToolsReady = $true
         ADToolsReady = $false
+        ExchangeOnlineToolsReady = $false
+        ExchangeOnPremToolsReady = $false
         ExchangeToolsReady = $false
         SqlToolsReady = $true
         ExportReady = $true
@@ -276,7 +284,8 @@ Should:
 - test network availability
 - use `Get-AuthenticationProvider` for provider and domain-state detection
 - optionally use `Test-ActiveDirectoryAvailable` as a dedicated AD probe
-- optionally test Exchange session availability
+- optionally test Exchange Online session availability
+- optionally test on-prem Exchange session or management-shell availability
 - optionally test SQL connection using configured connection string
 - optionally test logging
 - return one structured result object
@@ -312,7 +321,7 @@ Do not store secrets in config.
 3. Implement module and runtime detection first.
 4. Implement `Get-AuthenticationProvider` integration as a shared PAC platform helper.
 5. Add network and environment checks.
-6. Add Exchange, SQL, and logging tests behind explicit buttons.
+6. Add Exchange Online, Exchange on-prem, SQL, and logging tests behind explicit buttons.
 7. Return a structured capability object.
 8. Decide which helper patterns should move into `Shared\`.
 
@@ -324,6 +333,7 @@ Minimum validation:
 - module detection works even with missing enterprise modules
 - authentication-provider detection returns a safe local result when no domain controller is reachable
 - capability summary renders with partial readiness
+- Exchange readiness distinguishes between Exchange Online session state and on-prem Exchange session state
 - Enterprise User Audit can later consume the same capability model
 - no AD, Exchange, or SQL dependency should be required just to open the readiness tool
 

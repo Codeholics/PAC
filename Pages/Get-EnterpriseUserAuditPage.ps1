@@ -17,7 +17,7 @@ function Get-EnterpriseUserAuditConfigEntry {
         return $null
     }
 
-    if ($Config.PSObject.Properties.Name -contains 'savedValues') {
+    if ((Test-PacToolConfigSaveValuesEnabled -Config $Config) -and ($Config.PSObject.Properties.Name -contains 'savedValues')) {
         $savedValues = $Config.savedValues
         if ($null -ne $savedValues -and ($savedValues.PSObject.Properties.Name -contains $Name)) {
             $savedValue = $savedValues.$Name
@@ -180,6 +180,14 @@ function Show-EnterpriseUserAuditWindow {
     $includeSqlDataCheckBox.Content = 'Include SQL enrichment when available'
     $includeSqlDataCheckBox.IsChecked = [bool](Get-EnterpriseUserAuditConfigEntry -Config $toolConfig -Name 'IncludeSqlData')
 
+    $saveValuesCheckBox = [CheckBox]::new()
+    $saveValuesCheckBox.Content = 'Save values to config'
+    $saveValuesCheckBox.IsChecked = Test-PacToolConfigSaveValuesEnabled -Config $toolConfig
+
+    $saveValuesNote = [TextBlock]::new()
+    $saveValuesNote.Text = 'Leave this off to avoid persisting prior search criteria, connection strings, or other sensitive values.'
+    $saveValuesNote.TextWrapping = 'Wrap'
+
     $columnTitle = [TextBlock]::new()
     $columnTitle.Text = 'Columns'
     $columnTitle.Style = [Application]::Current.Resources['SubtitleTextBlockStyle']
@@ -272,6 +280,7 @@ function Show-EnterpriseUserAuditWindow {
         SampleDataCheckBox      = $sampleDataCheckBox
         IncludeMailboxCheckBox  = $includeMailboxCheckBox
         IncludeSqlDataCheckBox  = $includeSqlDataCheckBox
+        SaveValuesCheckBox      = $saveValuesCheckBox
     }
 
     $exportState = @{}
@@ -302,7 +311,7 @@ function Show-EnterpriseUserAuditWindow {
             SelectedColumns     = @($selectedColumns)
         }
 
-        Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues
+        Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues -SaveValuesEnabled ([bool]($state.SaveValuesCheckBox.IsChecked -eq $true))
 
         try {
             $invokeParameters = @{
@@ -355,7 +364,7 @@ function Show-EnterpriseUserAuditWindow {
             SelectedColumns     = @($selectedColumns)
         }
 
-        Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues
+        Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues -SaveValuesEnabled ([bool]($state.SaveValuesCheckBox.IsChecked -eq $true))
 
         try {
             $invokeParameters = @{
@@ -419,6 +428,8 @@ function Show-EnterpriseUserAuditWindow {
     $panel.Children.Add($sampleDataCheckBox)
     $panel.Children.Add($includeMailboxCheckBox)
     $panel.Children.Add($includeSqlDataCheckBox)
+    $panel.Children.Add($saveValuesCheckBox)
+    $panel.Children.Add($saveValuesNote)
     $panel.Children.Add($columnTitle)
     $panel.Children.Add($columnPanel)
     $panel.Children.Add($buttonPanel)

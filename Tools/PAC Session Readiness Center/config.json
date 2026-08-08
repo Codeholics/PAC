@@ -5,10 +5,8 @@
     "RunSqlTest": false,
     "RunLoggingTest": false
   },
-  "savedValues": {
-    "SqlConnectionString": "",
-    "RunExchangeTest": false,
-    "RunSqlTest": false,
-    "RunLoggingTest": false
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

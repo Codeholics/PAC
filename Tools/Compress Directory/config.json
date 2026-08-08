@@ -3,8 +3,8 @@
     "inputDirectory": "",
     "outputDirectory": ""
   },
-  "savedValues": {
-    "OutputDirectory": "",
-    "InputDirectory": ""
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

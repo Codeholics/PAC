@@ -5,6 +5,8 @@ function Save-PacToolConfig {
 
         [hashtable]$SavedValues,
 
+        [bool]$SaveValuesEnabled = $false,
+
         [string]$InputDirectory,
 
         [string]$OutputDirectory
@@ -28,12 +30,28 @@ function Save-PacToolConfig {
         }
     }
 
-    $savedValues = $SavedValues
-
-    $updatedConfig = [pscustomobject]@{
-        defaults = $defaults
-        savedValues = $savedValues
+    $updatedProperties = [ordered]@{}
+    foreach ($property in @($config.PSObject.Properties)) {
+        if ($property.Name -notin @('defaults', 'savedValues', 'preferences')) {
+            $updatedProperties[$property.Name] = $property.Value
+        }
     }
+
+    $preferences = [ordered]@{}
+    if ($config.PSObject.Properties['preferences'] -and $config.preferences) {
+        foreach ($property in @($config.preferences.PSObject.Properties)) {
+            if ($property.Name -ne 'SaveValuesEnabled') {
+                $preferences[$property.Name] = $property.Value
+            }
+        }
+    }
+    $preferences['SaveValuesEnabled'] = [bool]$SaveValuesEnabled
+
+    $updatedProperties['defaults'] = $defaults
+    $updatedProperties['preferences'] = $preferences
+    $updatedProperties['savedValues'] = if ($SaveValuesEnabled) { $SavedValues } else { @{} }
+
+    $updatedConfig = [pscustomobject]$updatedProperties
 
     $updatedConfig | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $ConfigPath
 }

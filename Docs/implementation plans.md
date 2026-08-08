@@ -72,6 +72,7 @@ Completed proof case:
 - It still reuses PAC shared helpers for manifest loading, config persistence, child-window chrome, page surface setup, and dialogs.
 - PAC Session Readiness Center is now the next implemented workflow-heavy PAC tool and the first platform-level readiness workflow.
 - It reuses the same custom-page/custom-window lane while also introducing shared authentication and AD-readiness helper functions for future enterprise tools.
+- Its Exchange readiness model now explicitly treats Exchange Online and on-prem Exchange as separate capability lanes so PAC can describe hybrid environments without assuming one Exchange topology.
 
 The most concrete follow-up inside that step is:
 
@@ -286,7 +287,7 @@ Suggested responsibilities:
 
 - `Compress-Directory.ps1`: the execution logic
 - `tool.json`: required tool manifest for display name, category, parameters, output type, and owned paths
-- `config.json`: defaults, environment-specific settings, saved paths
+- `config.json`: defaults, environment-specific settings, and opt-in saved values controlled by tool preferences
 - `input\`: source files, staged imports, or tool-owned working inputs
 - `temp\`: working files created during execution
 - `output\`: generated exports, reports, spreadsheets
@@ -403,6 +404,8 @@ What is already working in code:
 - the Compress Directory child window now opens through the shared manifest-driven helper and is centered using PAC window rules.
 - page-specific loaders now apply transparent page surfaces so they visually match the shell.
 - the Compress Directory UI now reads default or saved input and output paths from `config.json`.
+- PAC tool forms now treat value persistence as opt-in rather than automatic, with a per-tool `preferences.SaveValuesEnabled` flag and UI toggle that default to `false`.
+- existing tool configs now clear prior persisted form values by default so PAC no longer ships with stale user-entered addresses, text, or other last-run inputs in `savedValues`.
 - the Compress Directory tool now uses the shared manifest-driven simple-tool window builder as a fifth real proof case.
 - the Google Maps Url tool now proves the same modular pattern works for a second tool with a different parameter shape and follow-up actions.
 - the Google Maps Url tool now uses a shared manifest-driven simple-tool window builder for parameters, result display, and common follow-up actions.
@@ -440,6 +443,8 @@ What is already working in code:
 - PAC Session Readiness Center now proves PAC can host a platform-level workflow tool whose purpose is shared capability assessment rather than direct business-task execution.
 - the shared `Get-PacAuthenticationProvider` and `Test-PacActiveDirectoryAvailable` helpers now exist as PAC-owned platform helpers rather than remaining only as standalone draft functions.
 - PAC Session Readiness Center runtime validation now confirms it returns a structured readiness object in the current environment, including authentication provider, module count, environment state, and test results.
+- PAC Session Readiness Center Exchange validation now returns separate Exchange Online and Exchange On-Prem test results plus combined and per-lane capability flags, so hybrid Exchange environments no longer collapse into one ambiguous status.
+- PAC Session Readiness Center page output and plan docs now reflect the split Exchange model, so the readiness contract no longer implies that Exchange availability only means Exchange Online module presence.
 - the legacy `openContainingFolder` action now uses literal-path resolution, so result paths containing wildcard characters such as brackets behave the same way as the newer output-path actions.
 - the Compress Directory script now also uses literal-path handling for its own input, output, and overwrite checks, so bracketed folder names no longer fail inside the tool after passing builder validation.
 - picker initial-directory resolution in the shared input helper now also uses literal-path checks, so saved or current file/folder values containing brackets still seed the browse dialog correctly.
@@ -837,8 +842,8 @@ Reading rule:
 
 1. ✅ Add manifest-backed metadata to `Tools\Compress Directory\tool.json` and start reading from it instead of leaving it empty.
 2. ✅ Add `ToolPath`, `ScriptPath`, `ConfigPath`, `InputPath`, `TempPath`, and `OutputPath` into the page definition or manifest-backed tool definition.
-3. ✅ Start reading defaults or saved values from `config.json` into the Compress Directory tool UI.
-4. ✅ Decide whether PAC should write updated values back to `config.json` after a successful run.
+3. ✅ Start reading defaults or opt-in saved values from `config.json` into the Compress Directory tool UI.
+4. ✅ Decide whether PAC should write updated values back to `config.json` after a successful run, and make that persistence user-controlled.
 5. ✅ Broaden the self-building tool window contract for simple tools now that Compress Directory, Google Maps Url, Text to Speech, CSV to JSON, and Regex Extractor all use it.
 6. ✅ Create standard child-window title-bar behavior in the shared helper once callback-safe styling is finalized.
 7. ✅ Create shared labeled-input helpers for common tool forms.
@@ -868,3 +873,4 @@ The immediate cleanup priorities are now:
 - keep the shared self-building manifest contract stable unless a real tool exposes another concrete gap
 - keep Enterprise User Audit and PAC Session Readiness Center as the reference custom page paths so PAC continues to prove both simple and complex tool models
 - use Enterprise User Audit and PAC Session Readiness Center to validate where the boundary should sit between reusable PAC helpers, shared platform state, and custom workflow-specific UI
+- keep the shared readiness contract precise enough to distinguish AD availability, Exchange Online session state, Exchange On-Prem session state, SQL availability, and optional enrichment paths independently

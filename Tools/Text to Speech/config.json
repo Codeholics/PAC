@@ -7,12 +7,8 @@
     "Generate": false,
     "Resume": false
   },
-  "savedValues": {
-    "Voice": "",
-    "Resume": false,
-    "Generate": false,
-    "Speed": "",
-    "Volume": "",
-    "Text": "The open-tool path and the next likely execution defect are both patched. I’m validating the edited files plus a focused PowerShell check that mirrors the boolean/blank-parameter behavior."
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

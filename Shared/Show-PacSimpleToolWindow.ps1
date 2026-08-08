@@ -1485,7 +1485,7 @@ function Resolve-PacInitialParameterValue {
         }
     }
 
-    $fieldValue = if ($hasSavedEntry) { $savedValue } elseif ($hasDefaultValue) { $defaultValue } else { $null }
+    $fieldValue = if ((Test-PacToolConfigSaveValuesEnabled -Config $ToolConfig) -and $hasSavedEntry) { $savedValue } elseif ($hasDefaultValue) { $defaultValue } else { $null }
     if ($parameterType -in @('File', 'Folder') -and -not [string]::IsNullOrWhiteSpace([string]$fieldValue)) {
         $fieldValue = Get-PacEffectivePathValue -ParameterDefinition $ParameterDefinition -ParameterType $parameterType -Value $fieldValue
     }
@@ -1575,6 +1575,19 @@ function Show-PacSimpleToolWindow {
         $offlineNotice.Style = $resources['BodyTextBlockStyle']
         $root.Children.Add($offlineNotice)
     }
+
+    $saveValuesCheckBox = [CheckBox]::new()
+    $saveValuesCheckBox.Content = 'Save values to config'
+    $saveValuesCheckBox.IsChecked = Test-PacToolConfigSaveValuesEnabled -Config $toolConfig
+
+    $saveValuesNote = [TextBlock]::new()
+    $saveValuesNote.Text = 'Leave this off to avoid persisting prior form inputs or sensitive values between runs.'
+    $saveValuesNote.TextWrapping = 'Wrap'
+    $saveValuesNote.Style = $resources['CaptionTextBlockStyle']
+    $saveValuesNote.Opacity = 0.85
+
+    $root.Children.Add($saveValuesCheckBox)
+    $root.Children.Add($saveValuesNote)
 
     $root.Children.Add($primaryButton)
 
@@ -1748,6 +1761,7 @@ function Show-PacSimpleToolWindow {
         ToolManifest    = $ToolManifest
         RequiresNetwork = $requiresNetwork
         OfflineMessage  = $offlineMessage
+        SaveValuesCheckBox = $saveValuesCheckBox
     }
 
     $runCallback = [EventCallback]::new()
@@ -1922,7 +1936,7 @@ function Show-PacSimpleToolWindow {
                 }
             }
 
-            Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues
+            Save-PacToolConfig -ConfigPath $state.ToolManifest.configPath -SavedValues $savedValues -SaveValuesEnabled ([bool]($state.SaveValuesCheckBox.IsChecked -eq $true))
 
             if ($showSuccessDialog) {
                 Show-PacDialog -Title $successTitle -Content $successMessage -Owner $state.Owner

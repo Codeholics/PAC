@@ -49,7 +49,7 @@ function New-PacSessionTestResult {
     }
 }
 
-function Test-PacExchangeReadiness {
+function Test-PacExchangeOnlineReadiness {
     param(
         [switch]$Requested,
 
@@ -58,29 +58,73 @@ function Test-PacExchangeReadiness {
     )
 
     if (-not $Requested) {
-        return New-PacSessionTestResult -Name 'Exchange' -Status 'Skipped' -Message 'Exchange session test was not requested.'
+        return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Skipped' -Message 'Exchange Online session test was not requested.'
     }
 
     $exchangeModule = @($Modules | Where-Object Name -eq 'ExchangeOnlineManagement' | Select-Object -First 1)
     if (-not $exchangeModule -or -not $exchangeModule[0].Available) {
-        return New-PacSessionTestResult -Name 'Exchange' -Status 'Missing' -Message 'ExchangeOnlineManagement is not available.'
+        return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Missing' -Message 'ExchangeOnlineManagement is not available.'
     }
 
     $connectionCommand = Get-Command Get-ConnectionInformation -ErrorAction SilentlyContinue
     if (-not $connectionCommand) {
-        return New-PacSessionTestResult -Name 'Exchange' -Status 'ModuleOnly' -Message 'Exchange module is available but no active Exchange session command is loaded.'
+        return New-PacSessionTestResult -Name 'Exchange Online' -Status 'ModuleOnly' -Message 'ExchangeOnlineManagement is available but its connection-inspection command is not loaded in the current session.'
     }
 
     try {
         $connectionInfo = @(Get-ConnectionInformation -ErrorAction Stop)
         if ($connectionInfo.Count -gt 0) {
-            return New-PacSessionTestResult -Name 'Exchange' -Status 'Ready' -Message 'An Exchange session appears to be available.'
+            return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Ready' -Message 'An Exchange Online session appears to be available.'
         }
 
-        return New-PacSessionTestResult -Name 'Exchange' -Status 'Unavailable' -Message 'Exchange module is loaded but no active connection was reported.'
+        return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Unavailable' -Message 'ExchangeOnlineManagement is loaded but no active Exchange Online connection was reported.'
     }
     catch {
-        return New-PacSessionTestResult -Name 'Exchange' -Status 'Error' -Message $_.Exception.Message
+        return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Error' -Message $_.Exception.Message
+    }
+}
+
+function Test-PacExchangeOnPremReadiness {
+    param(
+        [switch]$Requested
+    )
+
+    if (-not $Requested) {
+        return New-PacSessionTestResult -Name 'Exchange On-Prem' -Status 'Skipped' -Message 'Exchange on-prem session test was not requested.'
+    }
+
+    try {
+        $exchangeSessions = @(
+            Get-PSSession -ErrorAction SilentlyContinue |
+                Where-Object {
+                    $_.State -eq 'Opened' -and
+                    $_.ConfigurationName -and
+                    ($_.ConfigurationName -match '^Microsoft\.Exchange')
+                }
+        )
+
+        if ($exchangeSessions.Count -gt 0) {
+            return New-PacSessionTestResult -Name 'Exchange On-Prem' -Status 'Ready' -Message 'An on-prem Exchange remote PowerShell session appears to be available.'
+        }
+
+        $exchangeServerCommand = Get-Command Get-ExchangeServer -ErrorAction SilentlyContinue
+        if ($exchangeServerCommand) {
+            return New-PacSessionTestResult -Name 'Exchange On-Prem' -Status 'Ready' -Message 'On-prem Exchange management commands appear to be loaded in the current session.'
+        }
+
+        $exchangeSnapIns = @()
+        if (Get-Command Get-PSSnapin -ErrorAction SilentlyContinue) {
+            $exchangeSnapIns = @(Get-PSSnapin -ErrorAction SilentlyContinue | Where-Object Name -match '^Microsoft\.Exchange')
+        }
+
+        if ($exchangeSnapIns.Count -gt 0) {
+            return New-PacSessionTestResult -Name 'Exchange On-Prem' -Status 'Ready' -Message 'On-prem Exchange snap-ins appear to be loaded in the current session.'
+        }
+
+        return New-PacSessionTestResult -Name 'Exchange On-Prem' -Status 'Unavailable' -Message 'No on-prem Exchange session or Exchange management shell was detected in the current session.'
+    }
+    catch {
+        return New-PacSessionTestResult -Name 'Exchange On-Prem' -Status 'Error' -Message $_.Exception.Message
     }
 }
 
@@ -162,7 +206,8 @@ function Get-PacToolReadinessStatus {
         [System.Collections.IEnumerable]$Tests
     )
 
-    $exchangeTest = @($Tests | Where-Object Name -eq 'Exchange' | Select-Object -First 1)
+    $exchangeOnlineTest = @($Tests | Where-Object Name -eq 'Exchange Online' | Select-Object -First 1)
+    $exchangeOnPremTest = @($Tests | Where-Object Name -eq 'Exchange On-Prem' | Select-Object -First 1)
     $sqlTest = @($Tests | Where-Object Name -eq 'SQL' | Select-Object -First 1)
 
     return @(
@@ -179,8 +224,11 @@ function Get-PacToolReadinessStatus {
                 'Ready with limitations'
             }
             Reason = if ($Authentication.Provider -eq 'AD') {
-                if ($exchangeTest -and $exchangeTest[0].Status -eq 'Ready') {
-                    'Active Directory is available; deeper Exchange and SQL features depend on current session state.'
+                if (
+                    ($exchangeOnlineTest -and $exchangeOnlineTest[0].Status -eq 'Ready') -or
+                    ($exchangeOnPremTest -and $exchangeOnPremTest[0].Status -eq 'Ready')
+                ) {
+                    'Active Directory is available; Exchange or SQL enrichment can run when the current session is connected.'
                 } else {
                     'Active Directory is available; some enrichment features may remain unavailable.'
                 }
@@ -207,7 +255,8 @@ function Invoke-PacSessionReadiness {
 
     $tests = @(
         (New-PacSessionTestResult -Name 'Active Directory' -Status $(if ($adAvailable) { 'Ready' } else { 'Unavailable' }) -Message $(if ($adAvailable) { 'Domain controller reachability confirmed.' } else { $authentication.Reason })),
-        (Test-PacExchangeReadiness -Requested:$RunExchangeTest -Modules $modules),
+        (Test-PacExchangeOnlineReadiness -Requested:$RunExchangeTest -Modules $modules),
+        (Test-PacExchangeOnPremReadiness -Requested:$RunExchangeTest),
         (Test-PacSqlReadiness -Requested:$RunSqlTest -ConnectionString $SqlConnectionString -Modules $modules),
         (Test-PacLoggingReadiness -Requested:$RunLoggingTest -Modules $modules)
     )
@@ -215,13 +264,19 @@ function Invoke-PacSessionReadiness {
     $winUiShellStatus = @($modules | Where-Object Name -eq 'WinUIShell' | Select-Object -First 1)
     $importExcelStatus = @($modules | Where-Object Name -eq 'ImportExcel' | Select-Object -First 1)
     $loggingStatus = @($tests | Where-Object Name -eq 'Logging' | Select-Object -First 1)
-    $exchangeStatus = @($tests | Where-Object Name -eq 'Exchange' | Select-Object -First 1)
+    $exchangeOnlineStatus = @($tests | Where-Object Name -eq 'Exchange Online' | Select-Object -First 1)
+    $exchangeOnPremStatus = @($tests | Where-Object Name -eq 'Exchange On-Prem' | Select-Object -First 1)
     $sqlStatus = @($tests | Where-Object Name -eq 'SQL' | Select-Object -First 1)
 
     $capabilities = [pscustomobject]@{
         GeneralToolsReady      = [bool]($winUiShellStatus -and $winUiShellStatus[0].Available)
         ADToolsReady           = $adAvailable
-        ExchangeToolsReady     = [bool]($exchangeStatus -and $exchangeStatus[0].Status -eq 'Ready')
+        ExchangeOnlineToolsReady = [bool]($exchangeOnlineStatus -and $exchangeOnlineStatus[0].Status -eq 'Ready')
+        ExchangeOnPremToolsReady = [bool]($exchangeOnPremStatus -and $exchangeOnPremStatus[0].Status -eq 'Ready')
+        ExchangeToolsReady     = [bool](
+            ($exchangeOnlineStatus -and $exchangeOnlineStatus[0].Status -eq 'Ready') -or
+            ($exchangeOnPremStatus -and $exchangeOnPremStatus[0].Status -eq 'Ready')
+        )
         SqlToolsReady          = [bool]($sqlStatus -and $sqlStatus[0].Status -eq 'Ready')
         ExportReady            = [bool]($importExcelStatus -and $importExcelStatus[0].Available)
         LoggingReady           = [bool](($loggingStatus -and $loggingStatus[0].Status -eq 'Ready') -or (@($modules | Where-Object Name -eq 'PSLogging' | Select-Object -First 1)[0].Available))

@@ -4,9 +4,8 @@
     "Mode": "array",
     "OutputFile": ""
   },
-  "savedValues": {
-    "OutputFile": "",
-    "CsvText": "",
-    "Mode": ""
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }

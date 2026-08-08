@@ -20,25 +20,8 @@
       "Source"
     ]
   },
-  "savedValues": {
-    "Division": "",
-    "Identity": "",
-    "SelectedColumns": [
-      "Enabled",
-      "SamAccountName",
-      "UserPrincipalName",
-      "Department",
-      "DisplayName",
-      "Source"
-    ],
-    "Manager": "",
-    "IncludeSqlData": false,
-    "Title": "",
-    "Group": "",
-    "Company": "",
-    "UseSampleData": true,
-    "ExportPath": "",
-    "IncludeMailbox": false,
-    "SqlConnectionString": ""
-  }
+  "preferences": {
+    "SaveValuesEnabled": false
+  },
+  "savedValues": {}
 }
