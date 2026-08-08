@@ -91,8 +91,53 @@ function Get-EnterpriseUserAuditModuleStatus {
     return [pscustomobject]$moduleStatus
 }
 
+function Get-EnterpriseUserAuditAdFilter {
+    param(
+        [string]$Identity,
+        [string]$Title,
+        [string]$Manager,
+        [string]$Company,
+        [string]$Division
+    )
+
+    $clauses = [System.Collections.ArrayList]::new()
+
+    if (-not [string]::IsNullOrWhiteSpace($Identity)) {
+        $escapedIdentity = $Identity.Replace("'", "''")
+        [void]$clauses.Add("(DisplayName -like '*$escapedIdentity*' -or SamAccountName -like '*$escapedIdentity*' -or UserPrincipalName -like '*$escapedIdentity*')")
+    }
+
+    foreach ($filterSpec in @(
+        @{ Name = 'Title'; Value = $Title },
+        @{ Name = 'Manager'; Value = $Manager },
+        @{ Name = 'Company'; Value = $Company },
+        @{ Name = 'Division'; Value = $Division }
+    )) {
+        if (-not [string]::IsNullOrWhiteSpace($filterSpec.Value)) {
+            $escapedValue = $filterSpec.Value.Replace("'", "''")
+            [void]$clauses.Add("($($filterSpec.Name) -like '*$escapedValue*')")
+        }
+    }
+
+    if ($clauses.Count -eq 0) {
+        return '*'
+    }
+
+    return ($clauses -join ' -and ')
+}
+
 function Get-EnterpriseUserAuditAdRecords {
     param(
+        [string]$Identity,
+
+        [string]$Title,
+
+        [string]$Manager,
+
+        [string]$Company,
+
+        [string]$Division,
+
         [string]$Group,
 
         [switch]$IncludeMailbox,
@@ -117,11 +162,13 @@ function Get-EnterpriseUserAuditAdRecords {
         'DistinguishedName'
     )
 
-    $users = @(Get-ADUser -Filter * -Properties $properties)
+    $adFilter = Get-EnterpriseUserAuditAdFilter -Identity $Identity -Title $Title -Manager $Manager -Company $Company -Division $Division
+    $memberLookup = $null
+    $groupMembers = @()
 
     if (-not [string]::IsNullOrWhiteSpace($Group)) {
         try {
-            $groupMembers = @(Get-ADGroupMember -Identity $Group -Recursive -ErrorAction Stop)
+            $groupMembers = @(Get-ADGroupMember -Identity $Group -Recursive -ErrorAction Stop | Where-Object objectClass -eq 'user')
             $memberLookup = @{}
             foreach ($member in $groupMembers) {
                 if ($member.PSObject.Properties.Name -contains 'DistinguishedName' -and $member.DistinguishedName) {
@@ -136,17 +183,40 @@ function Get-EnterpriseUserAuditAdRecords {
                     $memberLookup[$member.Name] = $true
                 }
             }
-
-            $users = @($users | Where-Object {
-                $memberLookup.ContainsKey($_.DistinguishedName) -or
-                $memberLookup.ContainsKey($_.SamAccountName) -or
-                $memberLookup.ContainsKey($_.Name)
-            })
         }
         catch {
             Write-Warning ("Unable to resolve group '{0}': {1}" -f $Group, $_.Exception.Message)
-            $users = @()
+            return @()
         }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($Group) -and $adFilter -eq '*') {
+        $resolvedUsers = foreach ($member in $groupMembers) {
+            $memberIdentity = $null
+
+            if ($member.PSObject.Properties.Name -contains 'DistinguishedName' -and $member.DistinguishedName) {
+                $memberIdentity = $member.DistinguishedName
+            }
+            elseif ($member.PSObject.Properties.Name -contains 'SamAccountName' -and $member.SamAccountName) {
+                $memberIdentity = $member.SamAccountName
+            }
+
+            if (-not [string]::IsNullOrWhiteSpace($memberIdentity)) {
+                Get-ADUser -Identity $memberIdentity -Properties $properties -ErrorAction SilentlyContinue
+            }
+        }
+        $users = @($resolvedUsers | Where-Object { $null -ne $_ })
+    }
+    else {
+        $users = @(Get-ADUser -Filter $adFilter -Properties $properties)
+    }
+
+    if ($memberLookup) {
+        $users = @($users | Where-Object {
+            $memberLookup.ContainsKey($_.DistinguishedName) -or
+            $memberLookup.ContainsKey($_.SamAccountName) -or
+            $memberLookup.ContainsKey($_.Name)
+        })
     }
 
     $mailboxCommand = if ($IncludeMailbox) { Get-Command Get-Mailbox -ErrorAction SilentlyContinue } else { $null }
@@ -300,7 +370,7 @@ function Invoke-EnterpriseUserAudit {
         $source = 'SampleData'
     }
     elseif ($moduleStatus.ActiveDirectory -eq 'Available') {
-        $records = Get-EnterpriseUserAuditAdRecords -Group $Group -IncludeMailbox:$IncludeMailbox -IncludeSqlData:$IncludeSqlData -SqlConnectionString $SqlConnectionString
+        $records = Get-EnterpriseUserAuditAdRecords -Identity $Identity -Title $Title -Manager $Manager -Company $Company -Division $Division -Group $Group -IncludeMailbox:$IncludeMailbox -IncludeSqlData:$IncludeSqlData -SqlConnectionString $SqlConnectionString
         $source = 'ActiveDirectory'
     }
 

@@ -5,6 +5,15 @@ param(
     [switch]$RunLoggingTest
 )
 
+$pacRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+if (-not (Get-Command Get-PacAuthenticationProvider -ErrorAction SilentlyContinue)) {
+    . (Join-Path $pacRoot 'Shared\Get-PacAuthenticationProvider.ps1')
+}
+
+if (-not (Get-Command Test-PacActiveDirectoryAvailable -ErrorAction SilentlyContinue)) {
+    . (Join-Path $pacRoot 'Shared\Test-PacActiveDirectoryAvailable.ps1')
+}
+
 function Get-PacSessionModuleCatalog {
     return @(
         [pscustomobject]@{ Name = 'WinUIShell'; RequiredBy = 'PAC Shell' },

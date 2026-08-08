@@ -73,8 +73,8 @@ These existing PAC functions are strong starting points for the readiness model:
 
 Recommended usage:
 
-- `Get-AuthenticationProvider` should become a shared PAC platform helper because it returns structured authentication and domain-state information.
-- `Test-ActiveDirectoryAvailable` should either remain a low-level AD probe or be folded into the broader readiness model rather than becoming the main platform contract by itself.
+- `Get-AuthenticationProvider` is now preserved as a legacy wrapper over the shared `Get-PacAuthenticationProvider` helper so PAC has one source of truth for provider and domain-state detection.
+- `Test-ActiveDirectoryAvailable` is now preserved as a legacy wrapper over the shared `Test-PacActiveDirectoryAvailable` helper so the readiness model and older entry points do not drift.
 
 Longer-term direction:
 
@@ -288,6 +288,7 @@ Should:
 - optionally test on-prem Exchange session or management-shell availability
 - optionally test SQL connection using configured connection string
 - optionally test logging
+- self-load required shared PAC helpers when they are not already present so the script remains directly runnable outside the full PAC shell
 - return one structured result object
 
 ## Page Responsibilities
@@ -309,7 +310,7 @@ Suggested config use:
 - default SQL connection string
 - optional environment labels
 - toggles for which tests are enabled
-- saved values for last-used SQL server/database
+- opt-in saved values for last-used SQL server/database or test toggles only when the user enables persistence
 - optional non-sensitive display preferences
 
 Do not store secrets in config.
@@ -319,7 +320,7 @@ Do not store secrets in config.
 1. Create the tool folder, manifest, config, and runtime script.
 2. Create the PAC page file and register it.
 3. Implement module and runtime detection first.
-4. Implement `Get-AuthenticationProvider` integration as a shared PAC platform helper.
+4. Implement `Get-AuthenticationProvider` integration as a shared PAC platform helper and keep any older entry points as thin wrappers only.
 5. Add network and environment checks.
 6. Add Exchange Online, Exchange on-prem, SQL, and logging tests behind explicit buttons.
 7. Return a structured capability object.
