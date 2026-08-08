@@ -438,6 +438,8 @@ What is already working in code:
 - Enterprise User Audit now proves that complex tools can reuse shared PAC helpers for manifest loading, config persistence, window chrome, page surface setup, and dialogs without being forced into the simple-tool builder.
 - Enterprise User Audit now includes an offline-safe sample-data mode so a complex PAC tool can be validated without live AD, Exchange, or SQL connectivity.
 - Enterprise User Audit runtime validation now confirms its direct script path can run in sample-data mode without export and return records while leaving `ExportPath` blank.
+- Enterprise User Audit AD querying now narrows the initial `Get-ADUser` filter when identity, title, manager, company, or division filters are provided, and group-only requests no longer require pulling the entire directory before intersecting members.
+- Enterprise User Audit now also keeps its manifest-declared `input\`, `temp\`, and `output\` directories tracked with placeholder files so clean checkouts still match the manifest contract.
 - Enterprise User Audit integration also exposed two WinUIShell-specific lessons for future custom tools: PAC child windows should use `Activate()` rather than `Show()`, and callback handlers should follow the existing single-state-object `ArgumentList` pattern instead of passing multiple custom callback arguments.
 - PAC Session Readiness Center now exists as a real PAC tool with its own page, manifest, config, runtime, and registered navigation entry.
 - PAC Session Readiness Center now proves PAC can host a platform-level workflow tool whose purpose is shared capability assessment rather than direct business-task execution.
@@ -445,6 +447,7 @@ What is already working in code:
 - PAC Session Readiness Center runtime validation now confirms it returns a structured readiness object in the current environment, including authentication provider, module count, environment state, and test results.
 - PAC Session Readiness Center Exchange validation now returns separate Exchange Online and Exchange On-Prem test results plus combined and per-lane capability flags, so hybrid Exchange environments no longer collapse into one ambiguous status.
 - PAC Session Readiness Center page output and plan docs now reflect the split Exchange model, so the readiness contract no longer implies that Exchange availability only means Exchange Online module presence.
+- PAC Session Readiness Center now self-loads its shared authentication and AD-readiness helpers when needed, so the runtime script can still be invoked directly from PowerShell instead of only from an already-bootstrapped PAC shell.
 - the legacy `openContainingFolder` action now uses literal-path resolution, so result paths containing wildcard characters such as brackets behave the same way as the newer output-path actions.
 - the Compress Directory script now also uses literal-path handling for its own input, output, and overwrite checks, so bracketed folder names no longer fail inside the tool after passing builder validation.
 - picker initial-directory resolution in the shared input helper now also uses literal-path checks, so saved or current file/folder values containing brackets still seed the browse dialog correctly.
