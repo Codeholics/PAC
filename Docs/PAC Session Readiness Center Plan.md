@@ -64,6 +64,15 @@ Reason:
 
 This should be the second major proof case for PAC's complex-tool lane after Enterprise User Audit.
 
+Longer-term placement direction:
+
+- keep this tool available during platform build-out while PAC is still proving enterprise connection flows
+- once PAC has a real settings experience and role-gated admin surfaces, move Session Readiness into that settings or admin area instead of leaving it as a first-class everyday end-user tool
+- treat it as a platform and diagnostics surface for developers, admins, and support owners rather than a general business workflow
+- use that future admin or developer settings area to manage reusable service configuration such as Exchange probe script paths, service usernames, credential file paths, SQL connection defaults, and similar environment-level references
+- allow those settings to be exported and reused as team JSON on the same network so platform setup is repeatable across multiple users or support workstations
+- keep secrets out of that JSON where possible; prefer stored credential-file references and other non-secret pointers over raw credentials
+
 ## Existing Functions To Reuse
 
 These existing PAC functions are strong starting points for the readiness model:
@@ -152,6 +161,30 @@ Actions:
 - Test SQL connection
 - Test export capability
 - Test logging write
+
+Exchange Online test behavior should support three levels:
+
+- inspect an already-open Exchange Online session
+- optionally attempt a generic `Connect-ExchangeOnline` probe when the user supplies a username and credential-file path
+- optionally run a local site-specific probe script when an environment needs wrapper logic that PAC should not hardcode
+
+If a site-specific probe path is used, PAC should expect one of two outcomes:
+
+- the script returns an object with `Status` and `Message`
+- the script creates a real Exchange session that PAC can validate with `Get-ConnectionInformation`
+
+If the probe script appears to only define functions and does not actually run a probe, PAC should return a friendly hint telling the user to use a wrapper script that calls the function.
+
+Suggested local template path for that wrapper pattern:
+
+- `Tools\PAC Session Readiness Center\input\Invoke-ExchangeOnlineProbe.Template.ps1`
+
+The template should be read as a starter file:
+
+- set the function-script path
+- set the function name
+- set any company-specific parameters such as username or credential-file path
+- let the wrapper call the function and return a small `Status` plus `Message` object back to PAC
 
 Each test should return:
 
@@ -308,10 +341,20 @@ Should:
 Suggested config use:
 
 - default SQL connection string
+- optional Exchange Online username
+- optional Exchange Online credential-file path
+- optional Exchange Online probe script path for site-specific wrappers
 - optional environment labels
 - toggles for which tests are enabled
 - opt-in saved values for last-used SQL server/database or test toggles only when the user enables persistence
 - optional non-sensitive display preferences
+
+Future settings-surface direction:
+
+- separate personal tool saved values from admin-managed environment settings
+- let admins or developers manage environment settings through a form instead of hand-editing JSON
+- allow import or export of team-scoped environment JSON for repeatable setup on the same network
+- keep readiness and enterprise tools consuming the same shared settings contract so Exchange, SQL, and similar connection behaviors do not drift across PAC
 
 Do not store secrets in config.
 

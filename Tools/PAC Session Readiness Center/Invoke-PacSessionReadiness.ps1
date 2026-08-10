@@ -1,5 +1,8 @@
 param(
     [string]$SqlConnectionString,
+    [string]$ExchangeOnlineUserName,
+    [string]$ExchangeOnlineCredentialPath,
+    [string]$ExchangeOnlineProbeScriptPath,
     [switch]$RunExchangeTest,
     [switch]$RunSqlTest,
     [switch]$RunLoggingTest
@@ -58,9 +61,107 @@ function New-PacSessionTestResult {
     }
 }
 
+function Import-PacExchangeOnlineCommands {
+    $connectCommand = Get-Command Connect-ExchangeOnline -ErrorAction SilentlyContinue
+    $connectionInfoCommand = Get-Command Get-ConnectionInformation -ErrorAction SilentlyContinue
+
+    if ($connectCommand -and $connectionInfoCommand) {
+        return $true
+    }
+
+    try {
+        Import-Module ExchangeOnlineManagement -ErrorAction Stop | Out-Null
+    }
+    catch {
+        return $false
+    }
+
+    $connectCommand = Get-Command Connect-ExchangeOnline -ErrorAction SilentlyContinue
+    $connectionInfoCommand = Get-Command Get-ConnectionInformation -ErrorAction SilentlyContinue
+
+    return [bool]($connectCommand -and $connectionInfoCommand)
+}
+
+function Get-PacExchangeOnlineCredential {
+    param(
+        [string]$UserName,
+
+        [string]$CredentialPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($UserName) -or [string]::IsNullOrWhiteSpace($CredentialPath)) {
+        return $null
+    }
+
+    if (-not (Test-Path -LiteralPath $CredentialPath)) {
+        throw "Exchange credential file was not found: $CredentialPath"
+    }
+
+    $secureString = Get-Content -LiteralPath $CredentialPath -ErrorAction Stop | ConvertTo-SecureString -ErrorAction Stop
+    return [pscredential]::new($UserName, $secureString)
+}
+
+function Invoke-PacExchangeOnlineProbeScript {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ScriptPath
+    )
+
+    if (-not (Test-Path -LiteralPath $ScriptPath)) {
+        throw "Exchange probe script was not found: $ScriptPath"
+    }
+
+    $result = & $ScriptPath
+    if ($null -eq $result) {
+        return $null
+    }
+
+    if (
+        ($result.PSObject.Properties.Name -contains 'Status') -and
+        ($result.PSObject.Properties.Name -contains 'Message')
+    ) {
+        return [pscustomobject]@{
+            Status  = [string]$result.Status
+            Message = [string]$result.Message
+        }
+    }
+
+    throw 'Exchange probe script must return either nothing or an object with Status and Message properties.'
+}
+
+function Test-PacLooksLikeFunctionDefinitionScript {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ScriptPath
+    )
+
+    try {
+        $content = Get-Content -LiteralPath $ScriptPath -Raw -ErrorAction Stop
+    }
+    catch {
+        return $false
+    }
+
+    if ([string]::IsNullOrWhiteSpace($content)) {
+        return $false
+    }
+
+    $hasFunctionDefinition = $content -match '(?im)^\s*function\s+[A-Za-z0-9_-]+'
+    $hasInvocationGuard = $content -match '(?im)\$MyInvocation\.InvocationName\s*-ne\s*''\.'''
+    $hasBoundParameterInvoker = $content -match '(?im)\bPSBoundParameters\b'
+
+    return [bool]($hasFunctionDefinition -and -not $hasInvocationGuard -and -not $hasBoundParameterInvoker)
+}
+
 function Test-PacExchangeOnlineReadiness {
     param(
         [switch]$Requested,
+
+        [string]$UserName,
+
+        [string]$CredentialPath,
+
+        [string]$ProbeScriptPath,
 
         [Parameter(Mandatory)]
         [System.Collections.IEnumerable]$Modules
@@ -75,8 +176,7 @@ function Test-PacExchangeOnlineReadiness {
         return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Missing' -Message 'ExchangeOnlineManagement is not available.'
     }
 
-    $connectionCommand = Get-Command Get-ConnectionInformation -ErrorAction SilentlyContinue
-    if (-not $connectionCommand) {
+    if (-not (Import-PacExchangeOnlineCommands)) {
         return New-PacSessionTestResult -Name 'Exchange Online' -Status 'ModuleOnly' -Message 'ExchangeOnlineManagement is available but its connection-inspection command is not loaded in the current session.'
     }
 
@@ -86,7 +186,57 @@ function Test-PacExchangeOnlineReadiness {
             return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Ready' -Message 'An Exchange Online session appears to be available.'
         }
 
-        return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Unavailable' -Message 'ExchangeOnlineManagement is loaded but no active Exchange Online connection was reported.'
+        if (-not [string]::IsNullOrWhiteSpace($ProbeScriptPath)) {
+            $probeResult = $null
+
+            try {
+                $probeResult = Invoke-PacExchangeOnlineProbeScript -ScriptPath $ProbeScriptPath
+
+                if ($null -ne $probeResult) {
+                    return New-PacSessionTestResult -Name 'Exchange Online' -Status $probeResult.Status -Message $probeResult.Message
+                }
+
+                $validatedConnection = @(Get-ConnectionInformation -ErrorAction Stop)
+                if ($validatedConnection.Count -gt 0) {
+                    return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Ready' -Message 'Exchange probe script ran successfully and Get-ConnectionInformation reported an active Exchange Online connection.'
+                }
+
+                if (Test-PacLooksLikeFunctionDefinitionScript -ScriptPath $ProbeScriptPath) {
+                    return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Unavailable' -Message 'Exchange probe script ran but did not create a connection. This file looks like a function-definition script, so PAC likely loaded commands without calling them. Use a small wrapper script that calls the function and returns Status and Message.'
+                }
+
+                return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Unavailable' -Message 'Exchange probe script ran, but Get-ConnectionInformation did not report an active Exchange Online connection.'
+            }
+            finally {
+                $validatedConnection = @(Get-ConnectionInformation -ErrorAction SilentlyContinue)
+                if ($validatedConnection.Count -gt 0) {
+                    Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+                }
+            }
+        }
+
+        $credential = Get-PacExchangeOnlineCredential -UserName $UserName -CredentialPath $CredentialPath
+        if ($null -eq $credential) {
+            return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Unavailable' -Message 'ExchangeOnlineManagement is loaded but no active Exchange Online connection was reported. Supply either an Exchange probe script path or both a username and credential-file path to attempt a real connection test.'
+        }
+
+        try {
+            Connect-ExchangeOnline -Credential $credential -ShowBanner:$false -ErrorAction Stop | Out-Null
+
+            $validatedConnection = @(Get-ConnectionInformation -ErrorAction Stop)
+            if ($validatedConnection.Count -gt 0) {
+                return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Ready' -Message 'Exchange Online connection succeeded with the supplied credential file and was validated through Get-ConnectionInformation.'
+            }
+
+            return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Unavailable' -Message 'Connect-ExchangeOnline completed but Get-ConnectionInformation did not report an active Exchange Online connection.'
+        }
+        finally {
+            $validatedConnection = @(Get-ConnectionInformation -ErrorAction SilentlyContinue)
+            if ($validatedConnection.Count -gt 0) {
+                Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+            }
+        }
+
     }
     catch {
         return New-PacSessionTestResult -Name 'Exchange Online' -Status 'Error' -Message $_.Exception.Message
@@ -252,6 +402,9 @@ function Invoke-PacSessionReadiness {
     [CmdletBinding()]
     param(
         [string]$SqlConnectionString,
+        [string]$ExchangeOnlineUserName,
+        [string]$ExchangeOnlineCredentialPath,
+        [string]$ExchangeOnlineProbeScriptPath,
         [switch]$RunExchangeTest,
         [switch]$RunSqlTest,
         [switch]$RunLoggingTest
@@ -264,7 +417,7 @@ function Invoke-PacSessionReadiness {
 
     $tests = @(
         (New-PacSessionTestResult -Name 'Active Directory' -Status $(if ($adAvailable) { 'Ready' } else { 'Unavailable' }) -Message $(if ($adAvailable) { 'Domain controller reachability confirmed.' } else { $authentication.Reason })),
-        (Test-PacExchangeOnlineReadiness -Requested:$RunExchangeTest -Modules $modules),
+        (Test-PacExchangeOnlineReadiness -Requested:$RunExchangeTest -UserName $ExchangeOnlineUserName -CredentialPath $ExchangeOnlineCredentialPath -ProbeScriptPath $ExchangeOnlineProbeScriptPath -Modules $modules),
         (Test-PacExchangeOnPremReadiness -Requested:$RunExchangeTest),
         (Test-PacSqlReadiness -Requested:$RunSqlTest -ConnectionString $SqlConnectionString -Modules $modules),
         (Test-PacLoggingReadiness -Requested:$RunLoggingTest -Modules $modules)

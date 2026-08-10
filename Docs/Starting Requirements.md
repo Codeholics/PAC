@@ -8,6 +8,9 @@ PowerShell WPF application that features all useful tools in one central locatio
 
 ### Configuration Files
 - I prefer to use JSON as a configuration file that the application can import for settings, data, and file paths. I normally set a variable for the root directory but other than that, all paths and settings should be coming from the config.
+- Longer-term, PAC should have an admin or developer settings area where service-related configuration can be managed through forms and then saved back to JSON.
+- That JSON should be reusable for team setup on the same network so admins can roll out shared environment settings such as service credential file paths, approved connection strategies, and other non-secret service configuration without re-entering them machine by machine.
+- Do not store raw passwords or other secrets directly in that shared JSON. Store references such as credential file paths, usernames, environment labels, and feature toggles instead.
 
 ### Application GUI Launch
 - `.bat` script that changes the execution policy to bypass and then calls the application start file.
@@ -17,6 +20,7 @@ Allow Active Directory Authentication (When detected in environment, otherwise h
 - With AD: Require authentication from active directory. We will need to capture the users SamAccountName, mail and additional AD details.
 - With AD: User should have a specific security group `SAMPLE SECURITY GROUP` in order to be authenticated successfully.
 - With AD: After being authenticated via Active Directory, the automation center will use a service account behind the scenes to execute scripts that require AD, Exchange, Azure, SQL permissions.
+- Admin or developer settings should eventually control those behind-the-scenes service connection inputs so normal users do not have to manage Exchange, SQL, or other enterprise connection details.
 - No AD: First time login would require apps temp admin account. 
 - With AD/No AD: We should keep a record of the users in either a SQLite db or a JSON file. We can use this for permissions and preferences.
 - With No AD: Scripts with the Role "Account Management" should have their buttons to launch the individual scripts set to view only. AD Authentication is required.

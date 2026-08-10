@@ -90,6 +90,7 @@ The repo already documents a broader application direction beyond the current ut
 - Active Directory-aware authentication when available.
 - Role-based access for sensitive tools.
 - User preference persistence with JSON or SQLite.
+- Admin or developer settings for shared service configuration such as Exchange, SQL, and other enterprise connection references.
 - Shared logging via `PSLogging`.
 - Local module bundling for environments with restricted install rights.
 - Registration flows for adding new tools with minimal wiring.
@@ -141,6 +142,7 @@ This README reflects the current prototype state of the PAC application. Some fe
 - Expand the tool catalog beyond the initial conversion and utility set.
 - Harden authentication and authorization flows.
 - Reuse PAC Session Readiness Center capability state across enterprise workflow tools.
+- Add an admin or developer settings surface for environment-level service configuration and team-reusable JSON setup.
 - Add preference persistence and theme handling.
 - Improve packaging for restricted enterprise environments.
 - Introduce more complex workflow pages alongside manifest-driven tools.

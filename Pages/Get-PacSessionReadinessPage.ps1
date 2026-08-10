@@ -106,9 +106,28 @@ function Show-PacSessionReadinessWindow {
     $sqlConnectionBox.PlaceholderText = 'Optional; only used when SQL test is requested'
     $sqlConnectionBox.Text = [string](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'SqlConnectionString')
 
+    $exchangeUserNameBox = [TextBox]::new()
+    $exchangeUserNameBox.Header = 'Exchange Online User Name'
+    $exchangeUserNameBox.PlaceholderText = 'Optional; example: serviceaccount@contoso.com'
+    $exchangeUserNameBox.Text = [string](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'ExchangeOnlineUserName')
+
+    $exchangeCredentialPathBox = [TextBox]::new()
+    $exchangeCredentialPathBox.Header = 'Exchange Online Credential File Path'
+    $exchangeCredentialPathBox.PlaceholderText = 'Optional; path to a ConvertTo-SecureString-compatible credential file'
+    $exchangeCredentialPathBox.Text = [string](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'ExchangeOnlineCredentialPath')
+
+    $exchangeProbeScriptPathBox = [TextBox]::new()
+    $exchangeProbeScriptPathBox.Header = 'Exchange Online Probe Script Path'
+    $exchangeProbeScriptPathBox.PlaceholderText = 'Optional; local script that performs a site-specific Exchange connection probe'
+    $exchangeProbeScriptPathBox.Text = [string](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'ExchangeOnlineProbeScriptPath')
+
     $exchangeCheckBox = [CheckBox]::new()
-    $exchangeCheckBox.Content = 'Run Exchange Online and on-prem session tests'
+    $exchangeCheckBox.Content = 'Run Exchange Online and on-prem tests'
     $exchangeCheckBox.IsChecked = [bool](Get-PacSessionReadinessConfigEntry -Config $toolConfig -Name 'RunExchangeTest')
+
+    $exchangeNote = [TextBlock]::new()
+    $exchangeNote.Text = 'If the custom probe script path is supplied, PAC runs that script first and accepts either a Status/Message result or a validated Exchange session. Otherwise, if the Exchange username and credential path are both supplied, PAC attempts Connect-ExchangeOnline, validates with Get-ConnectionInformation, and then disconnects. If all Exchange inputs are blank, PAC only inspects the current session.'
+    $exchangeNote.TextWrapping = 'Wrap'
 
     $sqlCheckBox = [CheckBox]::new()
     $sqlCheckBox.Content = 'Run SQL connection test'
@@ -154,6 +173,9 @@ function Show-PacSessionReadinessWindow {
         ToolWindow         = $toolWindow
         ResultBox          = $resultBox
         SqlConnectionBox   = $sqlConnectionBox
+        ExchangeUserNameBox = $exchangeUserNameBox
+        ExchangeCredentialPathBox = $exchangeCredentialPathBox
+        ExchangeProbeScriptPathBox = $exchangeProbeScriptPathBox
         ExchangeCheckBox   = $exchangeCheckBox
         SqlCheckBox        = $sqlCheckBox
         LoggingCheckBox    = $loggingCheckBox
@@ -167,6 +189,9 @@ function Show-PacSessionReadinessWindow {
 
         $savedValues = @{
             SqlConnectionString = $state.SqlConnectionBox.Text
+            ExchangeOnlineUserName = $state.ExchangeUserNameBox.Text
+            ExchangeOnlineCredentialPath = $state.ExchangeCredentialPathBox.Text
+            ExchangeOnlineProbeScriptPath = $state.ExchangeProbeScriptPathBox.Text
             RunExchangeTest     = [bool]($state.ExchangeCheckBox.IsChecked -eq $true)
             RunSqlTest          = [bool]($state.SqlCheckBox.IsChecked -eq $true)
             RunLoggingTest      = [bool]($state.LoggingCheckBox.IsChecked -eq $true)
@@ -177,6 +202,9 @@ function Show-PacSessionReadinessWindow {
         try {
             $invokeParameters = @{
                 SqlConnectionString = $state.SqlConnectionBox.Text
+                ExchangeOnlineUserName = $state.ExchangeUserNameBox.Text
+                ExchangeOnlineCredentialPath = $state.ExchangeCredentialPathBox.Text
+                ExchangeOnlineProbeScriptPath = $state.ExchangeProbeScriptPathBox.Text
                 RunExchangeTest     = [bool]($state.ExchangeCheckBox.IsChecked -eq $true)
                 RunSqlTest          = [bool]($state.SqlCheckBox.IsChecked -eq $true)
                 RunLoggingTest      = [bool]($state.LoggingCheckBox.IsChecked -eq $true)
@@ -197,7 +225,11 @@ function Show-PacSessionReadinessWindow {
     $panel.Children.Add($title)
     $panel.Children.Add($description)
     $panel.Children.Add($sqlConnectionBox)
+    $panel.Children.Add($exchangeUserNameBox)
+    $panel.Children.Add($exchangeCredentialPathBox)
+    $panel.Children.Add($exchangeProbeScriptPathBox)
     $panel.Children.Add($exchangeCheckBox)
+    $panel.Children.Add($exchangeNote)
     $panel.Children.Add($sqlCheckBox)
     $panel.Children.Add($loggingCheckBox)
     $panel.Children.Add($saveValuesCheckBox)

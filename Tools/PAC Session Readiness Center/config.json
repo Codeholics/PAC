@@ -1,6 +1,9 @@
 {
   "defaults": {
     "SqlConnectionString": "",
+    "ExchangeOnlineUserName": "",
+    "ExchangeOnlineCredentialPath": "",
+    "ExchangeOnlineProbeScriptPath": "",
     "RunExchangeTest": false,
     "RunSqlTest": false,
     "RunLoggingTest": false
