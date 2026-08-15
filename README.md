@@ -35,6 +35,8 @@ These tools live under `Tools/` and are surfaced through page definitions in `Pa
 ## Highlights
 
 - Shared WinUI shell built with the `WinUIShell` PowerShell module.
+- Local PAC module at `PSModules/PAC.psm1` for importing public shared helpers from `Shared/`.
+- Independent Exchange Online and Exchange On-Premises connection helpers for cloud, on-premises, and hybrid environments.
 - Manifest-driven simple-tool windows for fast tool registration.
 - Category-aware navigation model for grouping tools in the left pane.
 - Reusable shared helpers for dialogs, child windows, input controls, and page composition.
@@ -76,12 +78,23 @@ PAC/
 |- Docs/                  Planning and requirements notes
 |- Pages/                 Navigation pages and page registration
 |- Shared/                Shared PAC UI helpers and tool-window components
+|- PSModules/             Local PAC module and external-module notes
+|  |- PAC.psm1            Exports public Shared helper functions
+|  |- modules.json        External module dependency notes
 |- Tools/                 Individual tools and per-tool manifests/config
-|- WinUIShell Samples/    Reference experiments and sample UI scripts
-|- modules.json           External module dependency notes
 |- PSExecutionPolicyBypass.bat Default launcher
 |- start.ps1              Direct PowerShell entry script
 ```
+
+## Shared Module and Exchange Connections
+
+`PSModules/PAC.psm1` dot-sources the scripts under `Shared/` and exports PAC's public helper functions. From the repository root, load it during development with:
+
+```powershell
+Import-Module .\PSModules\PAC.psm1 -Force
+```
+
+Exchange Online and Exchange On-Premises use different connection helpers and are intentionally independent. Use the one required by the current workflow, or both for a hybrid workflow. See [Docs/Shared Module and Exchange Connections.md](Docs/Shared%20Module%20and%20Exchange%20Connections.md) for helper usage, module development guidance, and troubleshooting.
 
 ## Planned Direction
 
@@ -121,7 +134,7 @@ Current documented external dependencies include:
 - `SqlServer`
 - `ImportExcel`
 
-On-prem Exchange support is currently session-detected rather than module-declared. The readiness workflow can report loaded on-prem Exchange sessions or management shells separately from Exchange Online connectivity.
+On-prem Exchange support uses a remote `Microsoft.Exchange` PSSession rather than a PowerShell Gallery module. The readiness workflow reports loaded on-prem Exchange sessions or management shells separately from Exchange Online connectivity.
 
 See `PSModules/modules.json` and the docs in `Docs/` for the current planning notes around packaging and distribution.
 

@@ -79,11 +79,14 @@ These existing PAC functions are strong starting points for the readiness model:
 
 - `Get-AuthenticationProvider.ps1`
 - `Test-ActiveDirectoryAvailable.ps1`
+- `Connect-ExchangeOnline.ps1`
+- `Connect-ExchangeOnPrem.ps1`
 
 Recommended usage:
 
 - `Get-AuthenticationProvider` is now preserved as a legacy wrapper over the shared `Get-PacAuthenticationProvider` helper so PAC has one source of truth for provider and domain-state detection.
 - `Test-ActiveDirectoryAvailable` is now preserved as a legacy wrapper over the shared `Test-PacActiveDirectoryAvailable` helper so the readiness model and older entry points do not drift.
+- `Connect-ExchangeOnlineHelper` and `Connect-ExchangeOnPrem` are independent connection helpers. They are not fallback paths for one another.
 
 Longer-term direction:
 
@@ -167,6 +170,14 @@ Exchange Online test behavior should support three levels:
 - inspect an already-open Exchange Online session
 - optionally attempt a generic `Connect-ExchangeOnline` probe when the user supplies a username and credential-file path
 - optionally run a local site-specific probe script when an environment needs wrapper logic that PAC should not hardcode
+
+Exchange On-Premises test behavior should remain independent:
+
+- inspect an already-open `Microsoft.Exchange` PSSession or loaded management commands
+- optionally create a session through `Connect-ExchangeOnPrem` when an authorized user supplies a CAS server or endpoint URI and credentials
+- report an unavailable on-premises connection without changing the Exchange Online result
+
+For hybrid workflows, PAC may establish both connections, but a tool that needs only one service should request and evaluate only that service.
 
 If a site-specific probe path is used, PAC should expect one of two outcomes:
 
@@ -319,6 +330,7 @@ Should:
 - optionally use `Test-ActiveDirectoryAvailable` as a dedicated AD probe
 - optionally test Exchange Online session availability
 - optionally test on-prem Exchange session or management-shell availability
+- use the separate Exchange helper appropriate to an explicit connection action; do not connect to Exchange Online merely because on-premises Exchange is unavailable
 - optionally test SQL connection using configured connection string
 - optionally test logging
 - self-load required shared PAC helpers when they are not already present so the script remains directly runnable outside the full PAC shell
@@ -378,6 +390,7 @@ Minimum validation:
 - authentication-provider detection returns a safe local result when no domain controller is reachable
 - capability summary renders with partial readiness
 - Exchange readiness distinguishes between Exchange Online session state and on-prem Exchange session state
+- an unavailable on-premises Exchange session does not make a valid Exchange Online session unavailable, and the inverse is also true
 - Enterprise User Audit can later consume the same capability model
 - no AD, Exchange, or SQL dependency should be required just to open the readiness tool
 

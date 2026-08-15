@@ -29,14 +29,18 @@ try {
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
 } catch {}
 
+# Load PAC shared functions before page scripts are loaded.
+$localModulePath = Join-Path -Path $PSScriptRoot -ChildPath 'PSModules\PAC.psm1'
+try {
+    Import-Module $localModulePath -Force -ErrorAction Stop
+}
+catch {
+    throw "Failed to load PAC shared module: $($_.Exception.Message)"
+}
+
 # Load all page modules
 $PFunctions = Get-ChildItem (Join-Path -Path $PSScriptRoot -ChildPath "Pages") | Select-object -ExpandProperty FullName | Where-Object { $_ -like '*.ps1'}
 foreach ($f in $PFunctions) {
-    . $f
-}
-
-$sharedFunctions = Get-ChildItem (Join-Path -Path $PSScriptRoot -ChildPath "Shared") | Select-Object -ExpandProperty FullName | Where-Object { $_ -like '*.ps1' }
-foreach ($f in $sharedFunctions) {
     . $f
 }
 

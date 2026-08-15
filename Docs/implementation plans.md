@@ -163,6 +163,8 @@ Keep these in `start.ps1`:
 - frame navigation
 - startup logic
 
+`start.ps1` should import the local `PSModules\PAC.psm1` module before it loads page scripts. The module owns loading and exporting public functions from `Shared\`; the shell should not separately dot-source every `Shared\*.ps1` file once the module import is in use.
+
 `start.ps1` should not know how any individual tool window is built.
 
 PAC should support two tool-window lanes over time:
@@ -226,6 +228,19 @@ Suggested files:
 - `Shared\Invoke-PacScriptAction.ps1`
 
 This will remove repeated dialog setup and child window setup from every page.
+
+## Shared Module Boundary
+
+PAC now has a local module entry point at `PSModules\PAC.psm1`. It dot-sources scripts in `Shared\` and exports PAC's public helper functions with `Export-ModuleMember`.
+
+The intended boundary is:
+
+- `Shared\*.ps1`: define helper functions; do not call `Export-ModuleMember`
+- `PSModules\PAC.psm1`: load the shared scripts and export the public commands
+- `start.ps1`: import `PSModules\PAC.psm1` before pages are loaded
+- `Pages\` and `Tools\`: consume exported helper functions instead of loading shared scripts independently when the PAC shell is running
+
+For a direct tool invocation outside the PAC shell, a tool may load only the specific shared helper it requires. This preserves standalone execution without duplicating the complete startup path.
 
 Those shared helpers should be reused by both lanes so even complex tools are still assembled from common PAC primitives instead of becoming isolated one-off implementations.
 
